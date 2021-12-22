@@ -3,5 +3,10 @@ project(put_psiw C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(put_psiw
-        client.c)
+file( GLOB SOURCES *.c)
+foreach ( source ${SOURCES} )
+    string( REPLACE ".c" "" name ${source} )
+    string( REPLACE "/mnt/c/git/put-psiw/" "" name ${name} )
+    add_executable( ${name} ${source} )
+
+endforeach ( source ${SOURCES} )
