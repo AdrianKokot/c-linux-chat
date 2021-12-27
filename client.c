@@ -17,9 +17,10 @@ typedef struct {
     char username[255];
     bool shouldPrintHelp;
     int serverId;
+    long userId;
 } AppConfig;
 
-AppConfig *getInitialConfig(int argc, char *argv[]);
+void init(int argc, char *argv[]);
 
 int executeCommand(char command[255]);
 
@@ -30,7 +31,7 @@ bool isUsernameUnique(char username[255]);
 AppConfig *config;
 
 int main(int argc, char *argv[]) {
-    config = getInitialConfig(argc, argv);
+    init(argc, argv);
 
     if (config->shouldPrintHelp == true) {
         printHelp("Linux Chat App - Client\n\n", help);
@@ -56,8 +57,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-AppConfig *getInitialConfig(int argc, char *argv[]) {
-    AppConfig *config = malloc(sizeof(AppConfig));
+void init(int argc, char *argv[]) {
+    config = malloc(sizeof(AppConfig *));
     config->shouldPrintHelp = false;
 
     struct appArguments {
@@ -83,7 +84,7 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
             i++;
 
             if (i < argc) {
-                config->serverId = (int) strtol(argv[i], NULL, 16);
+                sscanf(argv[i], "%x", &config->serverId);
                 arguments.server = true;
             }
 
@@ -92,7 +93,7 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
 
     if (arguments.help) {
         config->shouldPrintHelp = true;
-        return config;
+        return;
     }
 
     if (!arguments.server) {
@@ -105,20 +106,20 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
         scanf("%x", &config->serverId);
     }
 
-    printf("Read server id: %d", config->serverId);
-
     if (!arguments.username) {
         printf("Please enter your username: ");
-        scanf("\n%255[^\n ]", config->username);
+        scanf("%255[^\n ]", config->username);
+        while (getchar() != '\n') {}
     }
 
 
     while (!isUsernameUnique(config->username)) {
         printf("Given username is already taken. Please enter different username: ");
         scanf("%255[^\n ]", config->username);
+        while (getchar() != '\n') {}
     }
 
-    return config;
+    return;
 }
 
 int executeCommand(char command[255]) {
@@ -145,10 +146,40 @@ bool doesServerExist(int serverId) {
 }
 
 bool isUsernameUnique(char username[255]) {
-    Request *request = create_usernameRequest(username);
+    Request request;
+    request.type = REQUEST_USERNAME;
 
-    strcpy(request->body, "1");
-    Request *response = make_request(request, config->serverId);
+    strcpy(request.body, username);
+    unsigned long bodyLength = strlen(request.body);
+    int id = msgget(0x1234, 0644 | IPC_EXCL);
 
-    return response->body[0] == '1' ? true : false;
+    if (id == -1) {
+        printf("Error during connection\n");
+        return false;
+    }
+
+    msgsnd(id, &request, bodyLength, 0);
+
+    loadingScreen(1);
+
+    Request response;
+    int size = (int) msgrcv(id, &response, REQUEST_SIZE, REQUEST_USERNAME, 0);
+
+    char *responseBody = malloc(sizeof(char) * size);
+
+    snprintf(responseBody, size + 1, "%s", response.body);
+
+    if (strcmp(responseBody, "taken") == 0) {
+        return false;
+    }
+
+    long temp = strtol(responseBody, NULL, 10);
+
+    if (temp == LONG_MAX) {
+        printf("couldn't parse user id\n");
+        return false;
+    }
+    config->userId = temp;
+
+    return true;
 }
