@@ -15,9 +15,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <stdarg.h>
 
-int msleep(unsigned int milliseconds);
-void printfDebug(const char *format, ...);
+#include "utils.h"
 
 #include "cli-helper.h"
 #include "communication-structs.h"

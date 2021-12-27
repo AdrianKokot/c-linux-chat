@@ -1,3 +1,4 @@
+
 #include "cli-helper.h"
 #include "shared.h"
 
@@ -27,4 +28,13 @@ void loadingScreen(double seconds) {
         msleep(200);
     }
     resetScreen();
+}
+
+bool checkSignature(const char*toCheck, const char*sig1, const char*sig2) {
+    return (strcmp(toCheck,  sig1) == 0 || strcmp(toCheck, sig2) == 0);
+}
+
+
+bool checkVSignature(const char *toCheck, const char *sig[2]) {
+    return (strcmp(toCheck, sig[0]) == 0 || strcmp(toCheck, sig[1]) == 0);
 }

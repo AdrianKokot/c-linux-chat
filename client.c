@@ -1,56 +1,36 @@
 #include "shared/shared.h"
-
-char *commandHelp[] = {
-        "/h, /help", "Prints available commands",
-        "/e, /exit", "Exits the app\n",
-        NULL
-};
-char *help[] = {
-        "-h, --help", "Prints help",
-        "-u, --username <name>", "Starts app with given username",
-        "-s, --server <id>",
-        "Starts app with connection to server with given id (should be hex without '0x')\n",
-        NULL
-};
-
-typedef struct {
-    char username[255];
-    bool shouldPrintHelp;
-    int serverId;
-    long userId;
-} AppConfig;
+#include "resources/client/client.h"
 
 void init(int argc, char *argv[]);
 
 int executeCommand(char command[255]);
 
-bool doesServerExist(int serverId);
-
-bool isUsernameUnique(char username[255]);
-
-AppConfig *config;
+bool doesServerExist();
+bool isUsernameUnique();
 
 int main(int argc, char *argv[]) {
     init(argc, argv);
 
-    if (config->shouldPrintHelp == true) {
-        printHelp("Linux Chat App - Client\n\n", help);
+    if (Config.shouldPrintHelp == true) {
+        printCliHelp();
         return 0;
     }
 
     resetScreen();
-    printf("Hello %s!\nType '/help' to get list of commands available for you.\n", config->username);
+    printf("%s\n", Config.username);
+    printf("Hello %s!\n%s", Config.username, Messages.helpInstruction);
 
     char command[255];
     while (true) {
-        scanf("%255s", command);
+        scanf("%255[^\n]", command);
+        clearStdin();
 
         if (command[0] == '/') {
             if (executeCommand(command)) {
                 return 0;
             }
         } else {
-            printf("%s: %s\n", config->username, command);
+            printf("%s: %s\n", Config.username, command);
         }
     }
 
@@ -58,8 +38,7 @@ int main(int argc, char *argv[]) {
 }
 
 void init(int argc, char *argv[]) {
-    config = malloc(sizeof(AppConfig *));
-    config->shouldPrintHelp = false;
+    Config.shouldPrintHelp = false;
 
     struct appArguments {
         bool help;
@@ -68,23 +47,23 @@ void init(int argc, char *argv[]) {
     } arguments = {false, false, false};
 
     for (int i = 1; i < argc; i++) {
-        if (!arguments.help && (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)) {
+        if (!arguments.help && checkVSignature(argv[i], CliCommands.help)) {
             arguments.help = true;
             break;
 
-        } else if (!arguments.username && (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--username") == 0)) {
+        } else if (!arguments.username && checkVSignature(argv[i], CliCommands.username)) {
             i++;
 
             if (i < argc) {
-                snprintf(config->username, 255, "%s", argv[i]);
+                snprintf(Config.username, 255, "%s", argv[i]);
                 arguments.username = true;
             }
 
-        } else if (!arguments.server && (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--server") == 0)) {
+        } else if (!arguments.server && checkVSignature(argv[i], CliCommands.server)) {
             i++;
 
             if (i < argc) {
-                sscanf(argv[i], "%x", &config->serverId);
+                sscanf(argv[i], "%x", &Config.serverId);
                 arguments.server = true;
             }
 
@@ -92,66 +71,65 @@ void init(int argc, char *argv[]) {
     }
 
     if (arguments.help) {
-        config->shouldPrintHelp = true;
+        Config.shouldPrintHelp = true;
         return;
     }
 
     if (!arguments.server) {
-        printf("Please enter server id to connect (hex without '0x'): ");
-        scanf("%x", &config->serverId);
+        printf("%s", Messages.serverIdRequirement);
+        scanf("%x", &Config.serverId);
+        clearStdin();
     }
 
-    while (!doesServerExist(config->serverId)) {
-        printf("Given server doesn't exist. Please enter server id to connect (hex without '0x'): ");
-        scanf("%x", &config->serverId);
+    while (!doesServerExist()) {
+        printf("%s", Messages.serverDoesntExist);
+        scanf("%x", &Config.serverId);
+        clearStdin();
     }
 
     if (!arguments.username) {
-        printf("Please enter your username: ");
-        scanf("%255[^\n ]", config->username);
-        while (getchar() != '\n') {}
+        printf("%s", Messages.askUsername);
+        scanf("%255[^\n]s", Config.username);
+        clearStdin();
     }
 
-
-    while (!isUsernameUnique(config->username)) {
-        printf("Given username is already taken. Please enter different username: ");
-        scanf("%255[^\n ]", config->username);
-        while (getchar() != '\n') {}
+    while (!isUsernameUnique()) {
+        printf("%s", Messages.chooseDifferentUsername);
+        scanf("%255[^\n]s", Config.username);
+        clearStdin();
     }
-
-    return;
 }
 
 int executeCommand(char command[255]) {
     resetScreen();
 
-    if (strcmp(command, "/e") == 0 || strcmp(command, "/exit") == 0) {
+    if (checkVSignature(command, AppCommands.exit)) {
         printf("Exiting..\n");
         return true;
     }
 
-    if (strcmp(command, "/h") == 0 || strcmp(command, "/help") == 0) {
-        printHelp("Available commands:\n\n", commandHelp);
+    if (checkVSignature(command, AppCommands.help)) {
+        printAppHelp();
         return false;
     }
 
-    printf("Unknown command. Type '/help' to get list of commands available for you.\n");
+    printf("Unknown command. %s", Messages.helpInstruction);
 
     return false;
 }
 
-bool doesServerExist(int serverId) {
-    int id = msgget(serverId, IPC_EXCL);
+bool doesServerExist() {
+    int id = msgget(Config.serverId, IPC_EXCL);
     return id == -1 && ENOENT == errno ? false : true;
 }
 
-bool isUsernameUnique(char username[255]) {
+bool isUsernameUnique() {
     Request request;
     request.type = REQUEST_USERNAME;
 
-    strcpy(request.body, username);
+    strcpy(request.body, Config.username);
     unsigned long bodyLength = strlen(request.body);
-    int id = msgget(0x1234, 0644 | IPC_EXCL);
+    int id = msgget(Config.serverId, 0644 | IPC_EXCL);
 
     if (id == -1) {
         printf("Error during connection\n");
@@ -179,7 +157,6 @@ bool isUsernameUnique(char username[255]) {
         printf("couldn't parse user id\n");
         return false;
     }
-    config->userId = temp;
 
     return true;
 }
