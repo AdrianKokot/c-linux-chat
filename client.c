@@ -1,11 +1,4 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/msg.h>
-#include <errno.h>
-#include "shared/cli-helper.h"
-#include "shared/communication-structs.h"
+#include "shared/shared.h"
 
 char *commandHelp[] = {
         "/h, /help", "Prints available commands",

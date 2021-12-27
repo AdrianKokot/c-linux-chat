@@ -7,6 +7,6 @@ file( GLOB SOURCES *.c)
 foreach ( source ${SOURCES} )
     string( REPLACE ".c" "" name ${source} )
     string( REPLACE "/mnt/c/git/put-psiw/" "" name ${name} )
-    add_executable( ${name} ${source} shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h )
+    add_executable( ${name} ${source} shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h shared/shared.c shared/shared.h )
 
 endforeach ( source ${SOURCES} )
