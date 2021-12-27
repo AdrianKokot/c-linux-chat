@@ -4,33 +4,44 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 #include <errno.h>
+#include "shared/cli-helper.h"
+#include "shared/communication-structs.h"
+
+char *commandHelp[] = {
+        "/h, /help", "Prints available commands",
+        "/e, /exit", "Exits the app\n",
+        NULL
+};
+char *help[] = {
+        "-h, --help", "Prints help",
+        "-u, --username <name>", "Starts app with given username",
+        "-s, --server <id>",
+        "Starts app with connection to server with given id (should be hex without '0x')\n",
+        NULL
+};
 
 typedef struct {
     char username[255];
     bool shouldPrintHelp;
-    unsigned int serverId;
+    int serverId;
 } AppConfig;
 
 AppConfig *getInitialConfig(int argc, char *argv[]);
 
-int printHelp();
-
 int executeCommand(char command[255]);
 
-void resetScreen() { printf("\e[1;1H\e[2J"); }
-
-void printfHelp(char *command, char *explanation) { printf("%*s%*s %s\n", 2, "", -25, command, explanation); }
-
-bool doesServerExist(unsigned int serverId);
+bool doesServerExist(int serverId);
 
 bool isUsernameUnique(char username[255]);
 
+AppConfig *config;
 
 int main(int argc, char *argv[]) {
-    AppConfig *config = getInitialConfig(argc, argv);
+    config = getInitialConfig(argc, argv);
 
     if (config->shouldPrintHelp == true) {
-        return printHelp();
+        printHelp("Linux Chat App - Client\n\n", help);
+        return 0;
     }
 
     resetScreen();
@@ -79,7 +90,7 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
             i++;
 
             if (i < argc) {
-                config->serverId = strtol(argv[i], NULL, 16);
+                config->serverId = (int) strtol(argv[i], NULL, 16);
                 arguments.server = true;
             }
 
@@ -101,10 +112,13 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
         scanf("%x", &config->serverId);
     }
 
+    printf("Read server id: %d", config->serverId);
+
     if (!arguments.username) {
         printf("Please enter your username: ");
         scanf("\n%255[^\n ]", config->username);
     }
+
 
     while (!isUsernameUnique(config->username)) {
         printf("Given username is already taken. Please enter different username: ");
@@ -112,16 +126,6 @@ AppConfig *getInitialConfig(int argc, char *argv[]) {
     }
 
     return config;
-}
-
-int printHelp() {
-    printf("Linux Chat App - Client\n\n");
-    printfHelp("-h, --help", "Prints help");
-    printfHelp("-u, --username <name>", "Starts app with given username");
-    printfHelp("-s, --server <id>",
-               "Starts app with connection to server with given id (should be hex without '0x')\n");
-
-    return 0;
 }
 
 int executeCommand(char command[255]) {
@@ -133,10 +137,7 @@ int executeCommand(char command[255]) {
     }
 
     if (strcmp(command, "/h") == 0 || strcmp(command, "/help") == 0) {
-        printf("Available commands:\n\n");
-        printfHelp("/h, /help", "Prints available commands");
-        printfHelp("/e, /exit", "Exits the app\n");
-
+        printHelp("Available commands:\n\n", commandHelp);
         return false;
     }
 
@@ -145,11 +146,16 @@ int executeCommand(char command[255]) {
     return false;
 }
 
-bool doesServerExist(unsigned int serverId) {
+bool doesServerExist(int serverId) {
     int id = msgget(serverId, IPC_EXCL);
     return id == -1 && ENOENT == errno ? false : true;
 }
 
 bool isUsernameUnique(char username[255]) {
-    return true;
+    Request *request = create_usernameRequest(username);
+
+    strcpy(request->body, "1");
+    Request *response = make_request(request, config->serverId);
+
+    return response->body[0] == '1' ? true : false;
 }
