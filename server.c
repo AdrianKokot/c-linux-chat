@@ -13,76 +13,92 @@ void terminateServer() {
 
 int currentUsers = 0;
 typedef struct {
-    int id;
+    long id;
     char username[255];
     int channelId;
 } User;
+User users[MAX_USERS];
 
+bool isServerFull() {
+    return currentUsers + 1 >= MAX_USERS;
+}
+
+bool isUsernameUnique(char *username) {
+
+    for (int i = 0; i < currentUsers; i++) {
+        if (strcmp(users[i].username, username) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+long addUser(char *username, long userId) {
+    currentUsers++;
+    users[currentUsers].id = userId;
+    strcpy(users[currentUsers].username, username);
+    return users[currentUsers].id;
+}
+
+int nextFreeType = 1000;
 
 int main(int argc, char *argv[]) {
-    User users[MAX_USERS];
 
-    currentUsers++;
-    strcpy(users[0].username, "asdf");
 
     signal(SIGINT, terminateServer);
 
     messageQueueId = msgget(0x1234, IPC_CREAT | 0644);
 
-    printfDebug("%d\n", messageQueueId);
-
     if (messageQueueId == -1) {
-        printf("Error\n");
+        printf("Error occurred during creation of message queue.\n");
         return 0;
     }
 
+    nextFreeType+=messageQueueId * 100;
+
     Request request;
+    char *responseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
+
 
     while (true) {
 
-        int size = (int) msgrcv(messageQueueId, &request, REQUEST_SIZE, 0, 0);
+        (int) msgrcv(messageQueueId, &request, REQUEST_SIZE, 0, 0);
+        memset(responseBody, 0, REQUEST_BODY_MAX_SIZE);
 
-        printfDebug("Received request of type %lu: %.*s\n", request.type, size, request.body);
+        printfDebug("Received request of type %lu: %.*s\n", request.type, request.bodyLength, request.body);
 
-        if (request.type == REQUEST_USERNAME) {
-            printf("Username check %d, %d\n", currentUsers + 1, MAX_USERS);
-            if (currentUsers + 1 < MAX_USERS) {
-                bool isTaken = false;
-                char *requestBody = malloc(sizeof(char) * size);
-                snprintf(requestBody, size + 1, "%s", request.body);
+        switch (request.type) {
+            case R_Init: {
 
-                printf("Requested username: %s\n", requestBody);
+                if (isServerFull()) {
+                    sendResponse(messageQueueId, R_Init, "", R_Init, StatusServerFull);
+                } else {
+                    sprintf(responseBody, "%d", nextFreeType++);
+                    sendResponse(messageQueueId, R_Init, responseBody, R_Init, StatusOK);
+                }
 
-                for (int i = 0; i < currentUsers; i++) {
-                    printf("Checking user %s\n", users[i].username);
+                break;
+            }
+            case R_Username: {
 
+                if (isServerFull()) {
+                    sendResponse(messageQueueId, request.type, "Server is full.", R_Username, StatusServerFull);
+                } else {
+                    char *requestedUsername = malloc(sizeof(char) * request.bodyLength);
+                    snprintf(requestedUsername, request.bodyLength + 1, "%s", request.body);
 
-                    if (strcmp(users[i].username, requestBody) == 0) {
-                        isTaken = true;
-                        break;
+                    if (isUsernameUnique(requestedUsername)) {
+                        addUser(requestedUsername, request.type);
+
+                        sendResponse(messageQueueId, request.type, "", R_Username, StatusOK);
+                    } else {
+                        sendResponse(messageQueueId, request.type, "taken", R_Username, StatusValidationError);
                     }
                 }
 
-                Response response = {REQUEST_USERNAME};
-
-                if (isTaken) {
-                    sprintf(response.body, "taken");
-                } else {
-                    currentUsers++;
-                    users[currentUsers].id = currentUsers;
-                    sprintf(users[currentUsers].username, "%.*s", size, request.body);
-                    sprintf(response.body, "%d", users[currentUsers].id);
-                }
-
-                unsigned long bodyLength = strlen(response.body);
-                msgsnd(messageQueueId, &response, bodyLength, 0);
-                printfDebug("Send message: %s with length %lu\n", response.body, bodyLength);
-            } else {
-                Response response = {REQUEST_USERNAME};
-                sprintf(response.body, "%ld", LONG_MAX);
-                msgsnd(messageQueueId, &response, strlen(response.body), 0);
+                break;
             }
-
         }
 
         sleep(2);

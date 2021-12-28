@@ -7,7 +7,7 @@ struct {
     char username[255];
     bool shouldPrintHelp;
     int serverId;
-    long userId;
+    long connectionId;
 } Config;
 
 struct clientConfig {

@@ -12,7 +12,6 @@ int printHelp(char *title, char *commands[]) {
     return 0;
 }
 
-
 void resetScreen() { printf("\e[1;1H\e[2J"); }
 
 void loadingScreen(double seconds) {

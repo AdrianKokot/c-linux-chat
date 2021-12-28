@@ -1,7 +1,7 @@
 #ifndef PUT_PSIW_SHARED_H
 #define PUT_PSIW_SHARED_H
 
-#define DEBUG 1
+#define DEBUG true
 
 #include <limits.h>
 #include <stdbool.h>

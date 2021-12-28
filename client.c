@@ -6,6 +6,9 @@ void init(int argc, char *argv[]);
 int executeCommand(char command[255]);
 
 bool doesServerExist();
+
+bool canJoinServer();
+
 bool isUsernameUnique();
 
 int main(int argc, char *argv[]) {
@@ -81,10 +84,19 @@ void init(int argc, char *argv[]) {
         clearStdin();
     }
 
-    while (!doesServerExist()) {
-        printf("%s", Messages.serverDoesntExist);
-        scanf("%x", &Config.serverId);
-        clearStdin();
+    bool validConnection = false;
+
+    while (!validConnection) {
+        bool serverExists = doesServerExist();
+        bool canJoin = canJoinServer();
+
+        validConnection = serverExists && canJoin;
+
+        if (!validConnection) {
+            printf("%s", serverExists ? Messages.serverFull : Messages.serverDoesntExist);
+            scanf("%x", &Config.serverId);
+            clearStdin();
+        }
     }
 
     if (!arguments.username) {
@@ -123,12 +135,7 @@ bool doesServerExist() {
     return id == -1 && ENOENT == errno ? false : true;
 }
 
-bool isUsernameUnique() {
-    Request request;
-    request.type = REQUEST_USERNAME;
-
-    strcpy(request.body, Config.username);
-    unsigned long bodyLength = strlen(request.body);
+bool canJoinServer() {
     int id = msgget(Config.serverId, 0644 | IPC_EXCL);
 
     if (id == -1) {
@@ -136,14 +143,35 @@ bool isUsernameUnique() {
         return false;
     }
 
-    msgsnd(id, &request, bodyLength, 0);
+    sendRequest(id, R_Init, "", R_Init);
+
+    Request response;
+    int size = (int) msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
+    char *responseBody = malloc(sizeof(char) * response.bodyLength);
+
+    snprintf(responseBody, size + 1, "%s", response.body);
+
+    Config.connectionId = strtol(responseBody, NULL, 10);
+
+    return response.status == StatusOK;
+}
+
+bool isUsernameUnique() {
+    int id = msgget(Config.serverId, 0644 | IPC_EXCL);
+
+    if (id == -1) {
+        printf("Error during connection\n");
+        return false;
+    }
+
+    sendRequest(id, Config.connectionId, Config.username, R_Username);
 
     loadingScreen(1);
 
     Request response;
-    int size = (int) msgrcv(id, &response, REQUEST_SIZE, REQUEST_USERNAME, 0);
+    int size = (int) msgrcv(id, &response, REQUEST_SIZE, R_Username, 0);
 
-    char *responseBody = malloc(sizeof(char) * size);
+    char *responseBody = malloc(sizeof(char) * response.bodyLength);
 
     snprintf(responseBody, size + 1, "%s", response.body);
 
