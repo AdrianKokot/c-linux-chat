@@ -11,6 +11,6 @@ set(CMAKE_C_STANDARD 11)
 #
 #endforeach ( source ${SOURCES} )
 
-add_executable( client client.c shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h shared/shared.c shared/shared.h resources/client/client.c resources/client/client.h resources/client/config.c resources/client/config.h shared/utils.c shared/utils.h)
+add_executable( client client.c shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h shared/shared.c shared/shared.h resources/client/client-lib.c resources/client/client-lib.h resources/client/client-config.c resources/client/client-config.h shared/utils.c shared/utils.h)
 
-add_executable( server server.c shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h shared/shared.c shared/shared.h shared/utils.c shared/utils.h)
+add_executable( server server.c shared/cli-helper.c shared/cli-helper.h shared/communication-structs.c shared/communication-structs.h shared/shared.c shared/shared.h shared/utils.c shared/utils.h resources/server/server-lib.c resources/server/server-lib.h resources/server/server-config.c resources/server/server-config.h)

@@ -16,11 +16,11 @@ void sendResponse(int messageQueueId, long userId, const char *body, RType type,
     request.type = userId;
     request.status = status;
     request.rtype = type;
-    sprintf(request.body, "%1024s", body);
+    snprintf(request.body, REQUEST_BODY_MAX_SIZE, "%s", body);
     request.bodyLength = strlen(request.body);
 
     msgsnd(messageQueueId, &request, REQUEST_SIZE, 0);
-    printfDebug("Send request of type %d with body %s of length %lu with status %d\n", request.type, request.body,
+    printfDebug("Send message of type %d with body %s of length %lu with status %d\n", request.type, request.body,
                 request.bodyLength, request.status);
 }
 

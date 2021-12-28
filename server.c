@@ -8,7 +8,8 @@ int messageQueueId;
 
 void terminateServer() {
     msgctl(messageQueueId, IPC_RMID, NULL);
-    kill(getpid(), 9);
+    signal(SIGINT,SIG_DFL);
+    kill(-getpid(), SIGINT);
 }
 
 int currentUsers = 0;
@@ -27,11 +28,11 @@ bool isUsernameUnique(char *username) {
 
     for (int i = 0; i < currentUsers; i++) {
         if (strcmp(users[i].username, username) == 0) {
-            return true;
+            return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 long addUser(char *username, long userId) {
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    nextFreeType+=messageQueueId * 100;
+    nextFreeType += messageQueueId * 100;
 
     Request request;
     char *responseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
@@ -68,32 +69,41 @@ int main(int argc, char *argv[]) {
 
         printfDebug("Received request of type %lu: %.*s\n", request.type, request.bodyLength, request.body);
 
-        switch (request.type) {
+        switch (request.rtype) {
             case R_Init: {
+                printfDebug("%s\n", "Received R_Init message");
 
                 if (isServerFull()) {
+                printfDebug("%s\n", "Server is full. Sending response.");
                     sendResponse(messageQueueId, R_Init, "", R_Init, StatusServerFull);
                 } else {
+                printfDebug("%s\n", "Server is not full. Sending response.");
                     sprintf(responseBody, "%d", nextFreeType++);
                     sendResponse(messageQueueId, R_Init, responseBody, R_Init, StatusOK);
                 }
 
                 break;
             }
-            case R_Username: {
+            case R_RegisterUser: {
+                printfDebug("%s\n", "Received R_RegisterUser message");
 
                 if (isServerFull()) {
-                    sendResponse(messageQueueId, request.type, "Server is full.", R_Username, StatusServerFull);
+                    printfDebug("%s\n", "Server is full. Sending response.");
+
+                    sendResponse(messageQueueId, request.type, "Server is full.", R_RegisterUser, StatusServerFull);
                 } else {
                     char *requestedUsername = malloc(sizeof(char) * request.bodyLength);
                     snprintf(requestedUsername, request.bodyLength + 1, "%s", request.body);
 
                     if (isUsernameUnique(requestedUsername)) {
+                        printfDebug("Username (%s) is unique. Sending response.\n", requestedUsername);
+
                         addUser(requestedUsername, request.type);
 
-                        sendResponse(messageQueueId, request.type, "", R_Username, StatusOK);
+                        sendResponse(messageQueueId, request.type, "", R_RegisterUser, StatusOK);
                     } else {
-                        sendResponse(messageQueueId, request.type, "taken", R_Username, StatusValidationError);
+                        printfDebug("%s\n", "Username is not unique. Sending response.");
+                        sendResponse(messageQueueId, request.type, "taken", R_RegisterUser, StatusValidationError);
                     }
                 }
 

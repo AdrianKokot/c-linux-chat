@@ -13,8 +13,7 @@ typedef enum {
 enum eRType {
     R_Generic,
     R_Init,
-    R_Username,
-    R_Register
+    R_RegisterUser
 };
 
 typedef enum eRType RType;
