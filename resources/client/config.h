@@ -8,6 +8,7 @@ struct {
     bool shouldPrintHelp;
     int serverId;
     long connectionId;
+    int queueId;
 } Config;
 
 struct clientConfig {

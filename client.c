@@ -145,6 +145,8 @@ bool canJoinServer() {
 
     sendRequest(id, R_Init, "", R_Init);
 
+    loadingScreen(1);
+
     Request response;
     int size = (int) msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
     char *responseBody = malloc(sizeof(char) * response.bodyLength);
@@ -152,28 +154,22 @@ bool canJoinServer() {
     snprintf(responseBody, size + 1, "%s", response.body);
 
     Config.connectionId = strtol(responseBody, NULL, 10);
+    Config.queueId = id;
 
     return response.status == StatusOK;
 }
 
 bool isUsernameUnique() {
-    int id = msgget(Config.serverId, 0644 | IPC_EXCL);
-
-    if (id == -1) {
-        printf("Error during connection\n");
-        return false;
-    }
-
-    sendRequest(id, Config.connectionId, Config.username, R_Username);
+    sendRequest(Config.queueId, Config.connectionId, Config.username, R_Username);
 
     loadingScreen(1);
 
     Request response;
-    int size = (int) msgrcv(id, &response, REQUEST_SIZE, R_Username, 0);
+    msgrcv(Config.queueId, &response, REQUEST_SIZE, R_Username, 0);
 
     char *responseBody = malloc(sizeof(char) * response.bodyLength);
 
-    snprintf(responseBody, size + 1, "%s", response.body);
+    snprintf(responseBody, response.bodyLength, "%s", response.body);
 
     if (strcmp(responseBody, "taken") == 0) {
         return false;
