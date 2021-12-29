@@ -31,6 +31,10 @@ struct clientMessages {
     const char *channelNameTaken;
     const char *serverChannelsFull;
     const char *channelCreated;
+    const char *channelDoesntExist;
+    const char *channelJoined;
+    const char *usersList;
+    const char *usersInChannelList;
 };
 
 struct clientMessages Messages;

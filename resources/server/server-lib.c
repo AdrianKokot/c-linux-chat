@@ -104,6 +104,38 @@ int addChannel(char *name) {
     return Server.channels[Server.channelCount++].id;
 }
 
+bool joinChannel(char *channelName) {
+    int userIndex = 0, channelIndex = 0, channelId = -1;
+    long userId = -1;
+
+    for(; userIndex < Server.userCount; userIndex++) {
+        if(Server.users[userIndex].id == Server.currentRequest.type) {
+            userId = Server.users[userIndex].id;
+            break;
+        }
+    }
+
+    if(userId == -1){
+        return false;
+    }
+
+    for(; channelIndex < Server.channelCount; channelIndex++) {
+        if (strcmp(Server.channels[channelIndex].name, channelName) == 0) {
+            channelId = Server.channels[channelIndex].id;
+            break;
+        }
+    }
+
+    if(channelId == -1) {
+        return false;
+    }
+
+    Server.channels[channelIndex].userCount++;
+    Server.users[userIndex].channelId = channelId;
+
+    return true;
+}
+
 void sendServerResponse(const char *body, RType rtype, StatusCode status) {
     sendResponse(Server.queueId, Server.currentRequest.responseType, body, rtype, status);
 }

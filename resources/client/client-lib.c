@@ -132,7 +132,27 @@ int executeCommand(char command[255]) {
     }
 
     if (checkVSignature(command, AppCommands.join)) {
+        char *channelName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
 
+        for (int i = 2; i < strlen(command); i++) {
+            if (command[i] == ' ') {
+                strncpy(channelName, command + i + 1, MAX_CHANNEL_NAME);
+                break;
+            }
+        }
+
+        sendClientRequest(channelName, R_JoinChannel);
+
+        Response response;
+        getResponse(&response);
+
+        if (response.status == StatusValidationError) {
+            printf("%s\n", Messages.channelDoesntExist);
+        } else {
+            printf("Successfully joined '%s' channel.\n", channelName);
+        }
+
+        return false;
     }
 
     printf("Unknown command. %s", Messages.helpInstruction);

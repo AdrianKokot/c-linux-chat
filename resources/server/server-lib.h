@@ -17,6 +17,8 @@ long addUser(char *username, long userId);
 
 int addChannel(char *name);
 
+bool joinChannel(char *channelName);
+
 void sendServerResponse(const char *body, RType rtype, StatusCode status);
 
 void sendServerInitResponse(const char *body, StatusCode status);

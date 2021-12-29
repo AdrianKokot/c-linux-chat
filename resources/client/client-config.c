@@ -29,7 +29,11 @@ struct clientMessages Messages = {
         "You are not connected to any channel.",
         "The given channel name is already taken.",
         "The server has maximum number of channels. Cannot create a new one.",
-        "Successfully created channel."
+        "Successfully created channel.",
+        "Channel with the given name doesn't exist.",
+        "Successfully joined the channel. ",
+        "List of users:\n",
+        "List of users on this channel:\n"
 };
 
 struct clientCliCommandSignatures CliCommands = {

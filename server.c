@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_Init: {
-                if (Server.userCount >= MAX_USERS ) {
+                if (Server.userCount >= MAX_USERS) {
                     sendServerInitResponse("", StatusServerFull);
                     break;
                 }
@@ -72,7 +72,16 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_JoinChannel: {
-                sendServerResponse("The given name is already taken.", R_JoinChannel, StatusValidationError);
+
+                char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
+                snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
+
+                if (joinChannel(requestedName)) {
+                    sendServerResponse("", R_JoinChannel, StatusOK);
+                    break;
+                }
+
+                sendServerResponse("The given channel doesn't exist.", R_JoinChannel, StatusValidationError);
                 break;
             }
             case R_CreateChannel: {
