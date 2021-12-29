@@ -117,8 +117,6 @@ int executeCommand(char command[255]) {
 
         sendClientRequest(channelName, R_CreateChannel);
 
-        loadingScreen(1);
-
         Response response;
         getResponse(&response);
 
@@ -161,8 +159,6 @@ bool canJoinServer() {
 
     sendInitRequest(id);
 
-    loadingScreen(0.5);
-
     Response response;
     msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
 
@@ -179,8 +175,6 @@ bool canJoinServer() {
 
 bool isUsernameUnique() {
     sendClientRequest(Client.username, R_RegisterUser);
-
-    loadingScreen(1);
 
     Response response;
     getResponse(&response);
@@ -199,7 +193,6 @@ void terminateClient() {
 
 char *getListOfChannels() {
     sendClientRequest("", R_ListChannel);
-    loadingScreen(1);
 
     Response response;
     getResponse(&response);
@@ -211,9 +204,21 @@ char *getListOfChannels() {
 }
 
 int getResponse(Response *response) {
-    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
-//    printfDebug("!GETRESPONSE!: %s\n", response->body);
-    return size;
+    int childId;
+
+    resetScreen();
+    if ((childId = fork()) == 0) {
+        loadingScreen(100);
+        kill(childId, SIGTERM);
+
+    } else {
+        int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
+        kill(childId, SIGTERM);
+
+        return size;
+    }
+
+    return -1;
 }
 
 void sendClientRequest(const char *body, RType rtype) {
