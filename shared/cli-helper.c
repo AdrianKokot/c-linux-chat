@@ -15,12 +15,12 @@ int printHelp(char *title, char *commands[]) {
 void resetScreen() { printf("\e[1;1H\e[2J"); }
 
 void loadingScreen(double seconds) {
-    int iterations = (int)(seconds * 1000) / 200;
+    int iterations = (int) (seconds * 1000) / 200;
 
     for (int i = 0; i < iterations; i++) {
         resetScreen();
         printf("Loading");
-        for (int j = 0; j < i%3; j++) {
+        for (int j = 0; j < i % 3; j++) {
             printf(".");
         }
         printf("\n");
@@ -29,11 +29,11 @@ void loadingScreen(double seconds) {
     resetScreen();
 }
 
-bool checkSignature(const char*toCheck, const char*sig1, const char*sig2) {
-    return (strcmp(toCheck,  sig1) == 0 || strcmp(toCheck, sig2) == 0);
+bool checkSignature(const char *toCheck, const char *sig1, const char *sig2) {
+    return (strncmp(toCheck, sig1, strlen(sig1)) == 0 || strncmp(toCheck, sig2, strlen(sig2)) == 0);
 }
 
 
 bool checkVSignature(const char *toCheck, const char *sig[2]) {
-    return (strcmp(toCheck, sig[0]) == 0 || strcmp(toCheck, sig[1]) == 0);
+    return (strncmp(toCheck, sig[0], strlen(sig[0])) == 0 || strncmp(toCheck, sig[1], strlen(sig[1])) == 0);
 }

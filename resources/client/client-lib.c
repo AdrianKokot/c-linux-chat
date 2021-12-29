@@ -86,6 +86,7 @@ void init(int argc, char *argv[]) {
     }
 }
 
+
 int executeCommand(char command[255]) {
     resetScreen();
 
@@ -104,6 +105,38 @@ int executeCommand(char command[255]) {
         return false;
     }
 
+    if (checkVSignature(command, AppCommands.create)) {
+        char *channelName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
+
+        for (int i = 2; i < strlen(command); i++) {
+            if (command[i] == ' ') {
+                strncpy(channelName, command + i + 1, MAX_CHANNEL_NAME);
+                break;
+            }
+        }
+
+        sendClientRequest(channelName, R_CreateChannel);
+
+        loadingScreen(1);
+
+        Response response;
+        getResponse(&response);
+
+        if (response.status == StatusServerFull) {
+            printf("%s\n", Messages.serverChannelsFull);
+        } else if (response.status == StatusValidationError) {
+            printf("%s\n", Messages.channelNameTaken);
+        } else {
+            printf("%s '%s'.\n", Messages.channelCreated, channelName);
+        }
+
+        return false;
+    }
+
+    if (checkVSignature(command, AppCommands.join)) {
+
+    }
+
     printf("Unknown command. %s", Messages.helpInstruction);
 
     return false;
@@ -115,8 +148,9 @@ bool doesServerExist() {
 }
 
 void sendInitRequest(int queueId) {
-    sendRequest(queueId, R_Init,R_Init, "", R_Init);
+    sendRequest(queueId, R_Init, R_Init, "", R_Init);
 }
+
 bool canJoinServer() {
     int id = msgget(Client.serverId, 0644 | IPC_EXCL);
 

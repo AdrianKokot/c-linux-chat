@@ -70,14 +70,20 @@ void init(int argc, char *argv[]) {
     Server.queueTypeGap = (Server.nextUserQueueId * 2 - 1) * -1;
 }
 
-bool isServerFull() {
-    return Server.userCount + 1 >= MAX_USERS;
-}
-
 bool isUsernameUnique(char *username) {
 
     for (int i = 0; i < Server.userCount; i++) {
         if (strcmp(Server.users[i].username, username) == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool isChannelNameUnique(char *name) {
+    for (int i = 0; i < Server.channelCount; i++) {
+        if (strcmp(Server.channels[i].name, name) == 0) {
             return false;
         }
     }

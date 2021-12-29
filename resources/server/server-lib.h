@@ -9,9 +9,9 @@ void terminateServer();
 
 void init(int argc, char *argv[]);
 
-bool isServerFull();
-
 bool isUsernameUnique(char *username);
+
+bool isChannelNameUnique(char *name);
 
 long addUser(char *username, long userId);
 

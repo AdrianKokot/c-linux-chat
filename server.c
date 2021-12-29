@@ -3,10 +3,6 @@
 
 #include "resources/server/server-lib.h"
 
-
-
-
-
 int main(int argc, char *argv[]) {
     init(argc, argv);
 
@@ -24,8 +20,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_Init: {
-
-                if (isServerFull()) {
+                if (Server.userCount >= MAX_USERS ) {
                     sendServerInitResponse("", StatusServerFull);
                     break;
                 }
@@ -39,7 +34,7 @@ int main(int argc, char *argv[]) {
             }
             case R_RegisterUser: {
 
-                if (isServerFull()) {
+                if (Server.userCount >= MAX_USERS) {
                     sendServerResponse("Server is full.", R_RegisterUser, StatusServerFull);
                     break;
                 }
@@ -53,7 +48,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                sendServerResponse("taken", R_RegisterUser, StatusValidationError);
+                sendServerResponse("The given name is already taken.", R_RegisterUser, StatusValidationError);
 
                 break;
             }
@@ -81,6 +76,21 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_CreateChannel: {
+
+                if (Server.channelCount >= MAX_CHANNELS) {
+                    sendServerResponse("Server is full.", R_CreateChannel, StatusServerFull);
+                    break;
+                }
+
+                char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
+                snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
+
+                if (isChannelNameUnique(requestedName)) {
+                    addChannel(requestedName);
+                    sendServerResponse("", R_CreateChannel, StatusOK);
+                    break;
+                }
+
                 sendServerResponse("The given name is already taken.", R_CreateChannel, StatusValidationError);
                 break;
             }

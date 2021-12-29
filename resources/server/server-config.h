@@ -4,7 +4,7 @@
 #include "../../shared/shared.h"
 
 #define MAX_USERS 5
-#define MAX_CHANNELS 10
+#define MAX_CHANNELS 1
 
 struct serverConfig {
     char *cliHelp[5];

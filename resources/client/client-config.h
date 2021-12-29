@@ -25,10 +25,12 @@ struct clientMessages {
     const char *serverIdRequirement;
     const char *serverDoesntExist;
     const char *serverFull;
-    const char *usernameTaken;
     const char *askUsername;
     const char *chooseDifferentUsername;
     const char *notConnected;
+    const char *channelNameTaken;
+    const char *serverChannelsFull;
+    const char *channelCreated;
 };
 
 struct clientMessages Messages;

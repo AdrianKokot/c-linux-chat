@@ -6,7 +6,7 @@ struct clientConfig ClientConfig = {
                 "/h, /help",  "Prints available commands",
                 "/ch, /channels", "Get list of available channels",
                 "/j, /join <name>", "Join a channel with the given name",
-                "/c, /create <name>", "Create & join a channel with the given name",
+                "/c, /create <name>", "Create a channel with the given name",
                 "/e, /exit",             "Exits the app\n",
                 NULL
         },
@@ -24,10 +24,12 @@ struct clientMessages Messages = {
         "Please enter server id to connect (hex without '0x'): ",
         "Given server doesn't exist. Please enter server id to connect (hex without '0x'): ",
         "The given server is full. Please enter different server id to connect (hex without '0x'): ",
-        "The given username is already taken.\n",
         "Please enter your username: ",
         "The given username is already taken. Please enter different username: ",
-        "You are not connected to any channel."
+        "You are not connected to any channel.",
+        "The given channel name is already taken.",
+        "The server has maximum number of channels. Cannot create a new one.",
+        "Successfully created channel."
 };
 
 struct clientCliCommandSignatures CliCommands = {
