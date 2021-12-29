@@ -5,6 +5,7 @@
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
+
 int messageQueueId;
 
 void terminateServer() {
@@ -61,8 +62,22 @@ int addChannel(char *name) {
 
 int nextFreeType = 1000;
 
-int main(int argc, char *argv[]) {
+Request request;
+char *responseBody;
 
+void sendServerResponse(const char *body, RType rtype, StatusCode status) {
+    sendResponse(messageQueueId, request.responseType, body, rtype, status);
+}
+
+void sendServerInitResponse(const char *body, StatusCode status) {
+    sendResponse(messageQueueId, R_Init, body, R_Init, status);
+}
+
+int main(int argc, char *argv[]) {
+    responseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
+
+    printf("==================================\n[%s] Start server\n==================================\n\n",
+           getTimeString());
     addChannel("default");
 
     signal(SIGINT, terminateServer);
@@ -76,55 +91,53 @@ int main(int argc, char *argv[]) {
 
     nextFreeType += messageQueueId * 100;
 
-    Request request;
-    char *responseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
+    int msgTypeGap = (nextFreeType * 2 - 1) * -1;
 
 
     while (true) {
 
-        (int) msgrcv(messageQueueId, &request, REQUEST_SIZE, 0, 0);
+        msgrcv(messageQueueId, &request, REQUEST_SIZE, msgTypeGap, 0);
         memset(responseBody, 0, REQUEST_BODY_MAX_SIZE);
 
-        printfDebug("Received request of type %lu: %.*s\n", request.type, request.bodyLength, request.body);
+        printfDebug(
+                "[REQUEST]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\n",
+                request,
+                request.body, request.bodyLength,
+                RTypeString[request.rtype],
+                StatusCodeString[request.status],
+                messageQueueId, request.type, request.responseType);
 
         switch (request.rtype) {
             default: {
                 break;
             }
             case R_Init: {
-                printfDebug("%s\n", "Received R_Init message");
 
                 if (isServerFull()) {
-                    printfDebug("%s\n", "Server is full. Sending response.");
-                    sendResponse(messageQueueId, R_Init, "", R_Init, StatusServerFull);
+                    sendServerInitResponse("", StatusServerFull);
                 } else {
-                    printfDebug("%s\n", "Server is not full. Sending response.");
                     sprintf(responseBody, "%d", nextFreeType++);
-                    sendResponse(messageQueueId, R_Init, responseBody, R_Init, StatusOK);
+                    sendServerInitResponse(responseBody, StatusOK);
                 }
+
+                sleep(1);
 
                 break;
             }
             case R_RegisterUser: {
-                printfDebug("%s\n", "Received R_RegisterUser message");
 
                 if (isServerFull()) {
-                    printfDebug("%s\n", "Server is full. Sending response.");
-
-                    sendResponse(messageQueueId, request.type, "Server is full.", R_RegisterUser, StatusServerFull);
+                    sendServerResponse("Server is full.", R_RegisterUser,
+                                       StatusServerFull);
                 } else {
                     char *requestedUsername = malloc(sizeof(char) * request.bodyLength);
                     snprintf(requestedUsername, request.bodyLength + 1, "%s", request.body);
 
                     if (isUsernameUnique(requestedUsername)) {
-                        printfDebug("Username (%s) is unique. Sending response.\n", requestedUsername);
-
                         addUser(requestedUsername, request.type);
-
-                        sendResponse(messageQueueId, request.type, "", R_RegisterUser, StatusOK);
+                        sendServerResponse("", R_RegisterUser, StatusOK);
                     } else {
-                        printfDebug("%s\n", "Username is not unique. Sending response.");
-                        sendResponse(messageQueueId, request.type, "taken", R_RegisterUser, StatusValidationError);
+                        sendServerResponse("taken", R_RegisterUser, StatusValidationError);
                     }
                 }
 
@@ -147,22 +160,18 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                sendResponse(messageQueueId, request.type, channelListBody, R_ListChannel, StatusOK);
+                sendServerResponse(channelListBody, R_ListChannel, StatusOK);
                 break;
             }
             case R_JoinChannel: {
-                sendResponse(messageQueueId, request.type, "Given name is already taken.", R_JoinChannel,
-                             StatusValidationError);
+                sendServerResponse("The given name is already taken.", R_JoinChannel, StatusValidationError);
                 break;
             }
             case R_CreateChannel: {
-                sendResponse(messageQueueId, request.type, "Given name is already taken.", R_CreateChannel,
-                             StatusValidationError);
+                sendServerResponse("The given name is already taken.", R_CreateChannel, StatusValidationError);
                 break;
             }
         }
-
-        sleep(2);
 
     }
 

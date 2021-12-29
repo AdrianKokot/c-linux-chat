@@ -110,6 +110,9 @@ bool doesServerExist() {
     return id == -1 && ENOENT == errno ? false : true;
 }
 
+void sendInitRequest(int queueId) {
+    sendRequest(queueId, R_Init,R_Init, "", R_Init);
+}
 bool canJoinServer() {
     int id = msgget(Config.serverId, 0644 | IPC_EXCL);
 
@@ -118,7 +121,7 @@ bool canJoinServer() {
         return false;
     }
 
-    sendRequest(id, R_Init, "", R_Init);
+    sendInitRequest(id);
 
     loadingScreen(0.5);
 
@@ -129,14 +132,15 @@ bool canJoinServer() {
         return false;
     }
 
-    Config.connectionId = strtol(response.body, NULL, 10);
+    Config.requestConnectionId = strtol(response.body, NULL, 10);
+    Config.responseConnectionId = Config.requestConnectionId * 2;
     Config.queueId = id;
 
     return true;
 }
 
 bool isUsernameUnique() {
-    sendRequest(Config.queueId, Config.connectionId, Config.username, R_RegisterUser);
+    sendClientRequest(Config.username, R_RegisterUser);
 
     loadingScreen(1);
 
@@ -156,7 +160,7 @@ void terminateClient() {
 }
 
 char *getListOfChannels() {
-    sendRequest(Config.queueId, Config.connectionId, "", R_ListChannel);
+    sendClientRequest("", R_ListChannel);
     loadingScreen(1);
 
     Response response;
@@ -169,7 +173,11 @@ char *getListOfChannels() {
 }
 
 int getResponse(Response *response) {
-    int size = (int) msgrcv(Config.queueId, response, REQUEST_SIZE, Config.connectionId, 0);
+    int size = (int) msgrcv(Config.queueId, response, REQUEST_SIZE, Config.responseConnectionId, 0);
     printfDebug("!GETRESPONSE!: %s\n", response->body);
     return size;
+}
+
+void sendClientRequest(const char *body, RType rtype) {
+    sendRequest(Config.queueId, Config.requestConnectionId, Config.responseConnectionId, body, rtype);
 }

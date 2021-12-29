@@ -11,6 +11,7 @@ typedef enum {
     StatusInternalError
 } StatusCode;
 
+
 enum eRType {
     R_Generic,
     R_Init,
@@ -22,20 +23,27 @@ enum eRType {
 
 typedef enum eRType RType;
 
+
+
 typedef struct {
     long type;
     char body[REQUEST_BODY_MAX_SIZE];
     StatusCode status;
     RType rtype;
     unsigned long bodyLength;
+    long responseType;
 } Request;
 
 typedef Request Response;
 
 const int REQUEST_SIZE;
 
-void sendRequest(int messageQueueId, long userId, const char *body, RType type);
+void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype);
+void sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status);
 
-void sendResponse(int messageQueueId, long userId, const char *body, RType type, StatusCode status);
+extern const char *RTypeString[];
+extern const char *StatusCodeString[];
+
+#include "shared.h"
 
 #endif

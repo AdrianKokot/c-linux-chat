@@ -8,7 +8,8 @@ struct {
     bool shouldPrintHelp;
     int channelId;
     int serverId;
-    long connectionId;
+    long requestConnectionId;
+    long responseConnectionId;
     int queueId;
 } Config;
 

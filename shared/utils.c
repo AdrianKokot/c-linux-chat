@@ -24,12 +24,24 @@ void printfDebug(const char *format, ...) {
     va_list args;
     va_start(args, format);
 
-    if (DEBUG)
+    if (DEBUG){
+        printf("[DEBUG] [%s] ", getTimeString());
         vprintf(format, args);
+    }
 
     va_end(args);
 }
 
 void clearStdin() {
     while (getchar() != '\n') {};
+}
+
+char *getTimeString() {
+    char *timeString = malloc(sizeof(char) * 9);
+
+    time_t secs = time(0);
+    struct tm *local = localtime(&secs);
+    sprintf(timeString, "%02d:%02d:%02d", local->tm_hour, local->tm_min, local->tm_sec);
+
+    return timeString;
 }

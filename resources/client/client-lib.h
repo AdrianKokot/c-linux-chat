@@ -21,4 +21,8 @@ char* getListOfChannels();
 
 int getResponse(Response *response);
 
+void sendClientRequest(const char *body, RType rtype);
+void sendClientResponse(const char *body, RType rtype, StatusCode status);
+
+
 #endif //PUT_PSIW_CLIENT_LIB_H
