@@ -13,7 +13,7 @@ struct {
 } Config;
 
 struct clientConfig {
-    char *commandHelp[5];
+    char *commandHelp[11];
     char *cliHelp[7];
 };
 
@@ -43,6 +43,9 @@ struct clientCliCommandSignatures CliCommands;
 struct appCommandSignatures {
     const char *help[2];
     const char *exit[2];
+    const char *channels[2];
+    const char *join[2];
+    const char *create[2];
 };
 
 struct appCommandSignatures AppCommands;

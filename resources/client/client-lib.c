@@ -95,6 +95,11 @@ int executeCommand(char command[255]) {
         return false;
     }
 
+    if (checkVSignature(command, AppCommands.channels)) {
+        printf("%s\n", getListOfChannels());
+        return false;
+    }
+
     printf("Unknown command. %s", Messages.helpInstruction);
 
     return false;
@@ -117,16 +122,17 @@ bool canJoinServer() {
 
     loadingScreen(0.5);
 
-    Request response;
-    int size = (int) msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
-    char *responseBody = malloc(sizeof(char) * response.bodyLength);
+    Response response;
+    msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
 
-    snprintf(responseBody, size + 1, "%s", response.body);
+    if (response.status != StatusOK) {
+        return false;
+    }
 
-    Config.connectionId = strtol(responseBody, NULL, 10);
+    Config.connectionId = strtol(response.body, NULL, 10);
     Config.queueId = id;
 
-    return response.status == StatusOK;
+    return true;
 }
 
 bool isUsernameUnique() {
@@ -134,8 +140,8 @@ bool isUsernameUnique() {
 
     loadingScreen(1);
 
-    Request response;
-    msgrcv(Config.queueId, &response, REQUEST_SIZE, Config.connectionId, 0);
+    Response response;
+    getResponse(&response);
 
     return response.status == StatusOK;
 }
@@ -145,6 +151,25 @@ void sendMessageToChannel(char message[255]) {
 }
 
 void terminateClient() {
-    signal(SIGINT,SIG_DFL);
+    signal(SIGINT, SIG_DFL);
     kill(-getpid(), SIGINT);
+}
+
+char *getListOfChannels() {
+    sendRequest(Config.queueId, Config.connectionId, "", R_ListChannel);
+    loadingScreen(1);
+
+    Response response;
+    getResponse(&response);
+
+    char *body = malloc(sizeof(char) * response.bodyLength);
+
+    snprintf(body, response.bodyLength, "%s", response.body);
+    return body;
+}
+
+int getResponse(Response *response) {
+    int size = (int) msgrcv(Config.queueId, response, REQUEST_SIZE, Config.connectionId, 0);
+    printfDebug("!GETRESPONSE!: %s\n", response->body);
+    return size;
 }

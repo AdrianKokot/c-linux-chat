@@ -4,14 +4,17 @@
 struct clientConfig ClientConfig = {
         {
                 "/h, /help",  "Prints available commands",
+                "/ch, /channels", "Get list of available channels",
+                "/j, /join <name>", "Join a channel with the given name",
+                "/c, /create <name>", "Create & join a channel with the given name",
                 "/e, /exit",             "Exits the app\n",
                 NULL
         },
         {
                 "-h, --help", "Prints help",
-                "-u, --username <name>", "Starts app with given username",
+                "-u, --username <name>", "Starts app with the given username",
                 "-s, --server <id>",
-                "Starts app with connection to server with given id (should be hex without '0x')\n",
+                "Starts app with connection to a server with the given id (should be hex without '0x')\n",
                 NULL
         }
 };
@@ -34,5 +37,8 @@ struct clientCliCommandSignatures CliCommands = {
 };
 struct appCommandSignatures AppCommands = {
         {"/h", "/help"},
-        {"/e", "/exit"}
+        {"/e", "/exit"},
+        {"/ch", "/channels"},
+        {"/j", "/join"},
+        {"/c", "/create"}
 };

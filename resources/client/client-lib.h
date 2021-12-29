@@ -17,4 +17,8 @@ void init(int argc, char *argv[]);
 
 void terminateClient();
 
+char* getListOfChannels();
+
+int getResponse(Response *response);
+
 #endif //PUT_PSIW_CLIENT_LIB_H
