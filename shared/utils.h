@@ -7,4 +7,6 @@ void clearStdin();
 
 char* getTimeString();
 
+char* repeat(char c, int n);
+
 #endif //PUT_PSIW_UTILS_H

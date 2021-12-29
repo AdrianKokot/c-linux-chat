@@ -10,8 +10,8 @@ void printAppHelp() {
 }
 
 void init(int argc, char *argv[]) {
-    Config.shouldPrintHelp = false;
-    Config.channelId = -1;
+    Client.shouldPrintHelp = false;
+    Client.channelId = -1;
 
     struct appArguments {
         bool help;
@@ -22,13 +22,17 @@ void init(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         if (!arguments.help && checkVSignature(argv[i], CliCommands.help)) {
             arguments.help = true;
-            break;
+
+            printCliHelp();
+            terminateClient();
+
+            return;
 
         } else if (!arguments.username && checkVSignature(argv[i], CliCommands.username)) {
             i++;
 
             if (i < argc) {
-                snprintf(Config.username, 255, "%s", argv[i]);
+                snprintf(Client.username, 255, "%s", argv[i]);
                 arguments.username = true;
             }
 
@@ -36,7 +40,7 @@ void init(int argc, char *argv[]) {
             i++;
 
             if (i < argc) {
-                sscanf(argv[i], "%x", &Config.serverId);
+                sscanf(argv[i], "%x", &Client.serverId);
                 arguments.server = true;
             }
 
@@ -44,13 +48,13 @@ void init(int argc, char *argv[]) {
     }
 
     if (arguments.help) {
-        Config.shouldPrintHelp = true;
+        Client.shouldPrintHelp = true;
         return;
     }
 
     if (!arguments.server) {
         printf("%s", Messages.serverIdRequirement);
-        scanf("%x", &Config.serverId);
+        scanf("%x", &Client.serverId);
         clearStdin();
     }
 
@@ -64,20 +68,20 @@ void init(int argc, char *argv[]) {
 
         if (!validConnection) {
             printf("%s", serverExists ? Messages.serverFull : Messages.serverDoesntExist);
-            scanf("%x", &Config.serverId);
+            scanf("%x", &Client.serverId);
             clearStdin();
         }
     }
 
     if (!arguments.username) {
         printf("%s", Messages.askUsername);
-        scanf("%255[^\n]s", Config.username);
+        scanf("%255[^\n]s", Client.username);
         clearStdin();
     }
 
     while (!isUsernameUnique()) {
         printf("%s", Messages.chooseDifferentUsername);
-        scanf("%255[^\n]s", Config.username);
+        scanf("%255[^\n]s", Client.username);
         clearStdin();
     }
 }
@@ -106,7 +110,7 @@ int executeCommand(char command[255]) {
 }
 
 bool doesServerExist() {
-    int id = msgget(Config.serverId, IPC_EXCL);
+    int id = msgget(Client.serverId, IPC_EXCL);
     return id == -1 && ENOENT == errno ? false : true;
 }
 
@@ -114,7 +118,7 @@ void sendInitRequest(int queueId) {
     sendRequest(queueId, R_Init,R_Init, "", R_Init);
 }
 bool canJoinServer() {
-    int id = msgget(Config.serverId, 0644 | IPC_EXCL);
+    int id = msgget(Client.serverId, 0644 | IPC_EXCL);
 
     if (id == -1) {
         printf("Error during connection\n");
@@ -132,15 +136,15 @@ bool canJoinServer() {
         return false;
     }
 
-    Config.requestConnectionId = strtol(response.body, NULL, 10);
-    Config.responseConnectionId = Config.requestConnectionId * 2;
-    Config.queueId = id;
+    Client.requestConnectionId = strtol(response.body, NULL, 10);
+    Client.responseConnectionId = Client.requestConnectionId * 2;
+    Client.queueId = id;
 
     return true;
 }
 
 bool isUsernameUnique() {
-    sendClientRequest(Config.username, R_RegisterUser);
+    sendClientRequest(Client.username, R_RegisterUser);
 
     loadingScreen(1);
 
@@ -151,7 +155,7 @@ bool isUsernameUnique() {
 }
 
 void sendMessageToChannel(char message[255]) {
-    printf("%s: %s\n", Config.username, message);
+    printf("%s: %s\n", Client.username, message);
 }
 
 void terminateClient() {
@@ -173,11 +177,11 @@ char *getListOfChannels() {
 }
 
 int getResponse(Response *response) {
-    int size = (int) msgrcv(Config.queueId, response, REQUEST_SIZE, Config.responseConnectionId, 0);
-    printfDebug("!GETRESPONSE!: %s\n", response->body);
+    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
+//    printfDebug("!GETRESPONSE!: %s\n", response->body);
     return size;
 }
 
 void sendClientRequest(const char *body, RType rtype) {
-    sendRequest(Config.queueId, Config.requestConnectionId, Config.responseConnectionId, body, rtype);
+    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype);
 }

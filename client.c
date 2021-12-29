@@ -1,20 +1,12 @@
-#include "shared/shared.h"
 #include "resources/client/client-lib.h"
 
-
 int main(int argc, char *argv[]) {
-    signal(SIGINT, terminateClient);
-
     init(argc, argv);
 
-    if (Config.shouldPrintHelp == true) {
-        printCliHelp();
-        terminateClient();
-        return 0;
-    }
+    signal(SIGINT, terminateClient);
 
     resetScreen();
-    printf("Hello %s!\n%s", Config.username, Messages.helpInstruction);
+    printf("Hello %s!\n%s", Client.username, Messages.helpInstruction);
 
     char command[255];
     while (true) {
@@ -26,7 +18,7 @@ int main(int argc, char *argv[]) {
                 terminateClient();
                 return 0;
             }
-        } else if (Config.channelId != -1) {
+        } else if (Client.channelId != -1) {
             sendMessageToChannel(command);
         } else {
             printf("%s %s", Messages.notConnected, Messages.helpInstruction);

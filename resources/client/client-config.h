@@ -1,17 +1,17 @@
 #ifndef PUT_PSIW_SERVER_CONFIG_H
 #define PUT_PSIW_CONFIG_H
 
-#include <stdbool.h>
+#include "../../shared/shared.h"
 
 struct {
-    char username[255];
+    char username[MAX_USERNAME];
     bool shouldPrintHelp;
     int channelId;
     int serverId;
     long requestConnectionId;
     long responseConnectionId;
     int queueId;
-} Config;
+} Client;
 
 struct clientConfig {
     char *commandHelp[11];

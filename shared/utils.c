@@ -24,7 +24,7 @@ void printfDebug(const char *format, ...) {
     va_list args;
     va_start(args, format);
 
-    if (DEBUG){
+    if (DEBUG) {
         printf("[DEBUG] [%s] ", getTimeString());
         vprintf(format, args);
     }
@@ -44,4 +44,14 @@ char *getTimeString() {
     sprintf(timeString, "%02d:%02d:%02d", local->tm_hour, local->tm_min, local->tm_sec);
 
     return timeString;
+}
+
+char *repeat(char c, int n) {
+    char *result = malloc(sizeof(char) * (n + 1));
+
+    for (int i = 0; i < n; i++) {
+        result[i] = c;
+    }
+
+    return result;
 }
