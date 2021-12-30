@@ -3,18 +3,22 @@
 
 #include "../../shared/shared.h"
 
+#define CLIENT_DEBUG true
+
 struct {
     char username[MAX_USERNAME];
     bool shouldPrintHelp;
     int channelId;
+    char *channelName;
     int serverId;
     long requestConnectionId;
     long responseConnectionId;
     int queueId;
+    int channelListeningChildPid;
 } Client;
 
 struct clientConfig {
-    char *commandHelp[11];
+    char *commandHelp[13];
     char *cliHelp[7];
 };
 
@@ -53,6 +57,7 @@ struct appCommandSignatures {
     const char *channels[2];
     const char *join[2];
     const char *create[2];
+    const char *leave[2];
 };
 
 struct appCommandSignatures AppCommands;

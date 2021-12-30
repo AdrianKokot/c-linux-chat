@@ -3,6 +3,8 @@
 
 #define REQUEST_BODY_MAX_SIZE 1024
 
+#include <stdbool.h>
+
 typedef enum {
     StatusG,
     StatusOK,
@@ -11,19 +13,21 @@ typedef enum {
     StatusInternalError
 } StatusCode;
 
-
 enum eRType {
     R_Generic,
     R_Init,
     R_RegisterUser,
     R_ListChannel,
     R_JoinChannel,
-    R_CreateChannel
+    R_LeaveChannel,
+    R_CreateChannel,
+    R_UserOnChannelList,
+    R_UserList,
+    R_ChannelMessage,
+    R_PrivateMessage
 };
 
 typedef enum eRType RType;
-
-
 
 typedef struct {
     long type;
@@ -32,14 +36,15 @@ typedef struct {
     RType rtype;
     unsigned long bodyLength;
     long responseType;
+    int channelId;
 } Request;
 
 typedef Request Response;
 
 const int REQUEST_SIZE;
 
-void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype);
-void sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status);
+void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype, int channelId, bool debug);
+void sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status, int channelId, bool debug);
 
 extern const char *RTypeString[];
 extern const char *StatusCodeString[];

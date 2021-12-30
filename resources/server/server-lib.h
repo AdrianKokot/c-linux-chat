@@ -13,16 +13,22 @@ bool isUsernameUnique(char *username);
 
 bool isChannelNameUnique(char *name);
 
-long addUser(char *username, long userId);
+long addUser(char *username, long userId, long responseConnectionId);
 
 int addChannel(char *name);
 
-bool joinChannel(char *channelName);
+int joinChannel(char *channelName);
 
-void sendServerResponse(const char *body, RType rtype, StatusCode status);
+void sendServerResponse(const char *body,  StatusCode status);
 
 void sendServerInitResponse(const char *body, StatusCode status);
 
 void listenForRequest();
+
+bool doesChannelExistById(int id);
+
+void sendChannelMessage(const char *message, int id);
+
+bool leaveChannel();
 
 #endif //PUT_PSIW_SERVER_LIB_H

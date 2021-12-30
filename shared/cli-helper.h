@@ -7,6 +7,7 @@
 int printHelp(char *title, char * commands[]);
 
 void resetScreen();
+void resetLine();
 
 void loadingScreen(double seconds);
 

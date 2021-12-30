@@ -1,4 +1,3 @@
-#include "../../shared/shared.h"
 #include "client-lib.h"
 
 void printCliHelp() {
@@ -86,6 +85,23 @@ void init(int argc, char *argv[]) {
     }
 }
 
+void stopListeningForChannelMessages() {
+    if (Client.channelListeningChildPid != -1) {
+        kill(Client.channelListeningChildPid, SIGTERM);
+    }
+}
+
+void startListeningForChannelMessages() {
+    if ((Client.channelListeningChildPid = fork()) == 0) {
+        while (true) {
+            Response response;
+            msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId + 1, 0);
+            printf("%s\n", response.body);
+        }
+    }
+    return;
+}
+
 
 int executeCommand(char command[255]) {
     resetScreen();
@@ -149,7 +165,28 @@ int executeCommand(char command[255]) {
         if (response.status == StatusValidationError) {
             printf("%s\n", Messages.channelDoesntExist);
         } else {
+            Client.channelId = (int) strtol(response.body, NULL, 10);
+            Client.channelName = channelName;
             printf("Successfully joined '%s' channel.\n", channelName);
+            startListeningForChannelMessages();
+        }
+
+        return false;
+    }
+
+    if (checkVSignature(command, AppCommands.leave)) {
+
+        sendClientRequest("", R_LeaveChannel);
+
+        Response response;
+        getResponse(&response);
+
+        if (response.status == StatusValidationError) {
+            printf("%s\n", Messages.notConnected);
+        } else {
+            Client.channelId = -1;
+            printf("Successfully left channel.\n");
+            stopListeningForChannelMessages();
         }
 
         return false;
@@ -166,7 +203,7 @@ bool doesServerExist() {
 }
 
 void sendInitRequest(int queueId) {
-    sendRequest(queueId, R_Init, R_Init, "", R_Init);
+    sendRequest(queueId, R_Init, R_Init, "", R_Init, Client.channelId, CLIENT_DEBUG);
 }
 
 bool canJoinServer() {
@@ -203,7 +240,14 @@ bool isUsernameUnique() {
 }
 
 void sendMessageToChannel(char message[255]) {
-    printf("%s: %s\n", Client.username, message);
+    resetLine();
+    sendClientRequest(message, R_ChannelMessage);
+    Response response;
+    getResponse(&response);
+
+    if (response.status != StatusOK) {
+        printf("Couldn't send a message.\n");
+    }
 }
 
 void terminateClient() {
@@ -219,7 +263,8 @@ char *getListOfChannels() {
 
     char *body = malloc(sizeof(char) * response.bodyLength);
 
-    snprintf(body, response.bodyLength, "%s", response.body);
+    snprintf(body, response.bodyLength + 1, "%s", response.body);
+
     return body;
 }
 
@@ -235,6 +280,16 @@ int getResponse(Response *response) {
         int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
         kill(childId, SIGTERM);
 
+        if (CLIENT_DEBUG) {
+            printfDebug(
+                    "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                    "RESPONSE",
+                    response->body, response->bodyLength,
+                    RTypeString[response->rtype],
+                    StatusCodeString[response->status],
+                    response->type, response->responseType, response->channelId);
+        }
+
         return size;
     }
 
@@ -242,5 +297,6 @@ int getResponse(Response *response) {
 }
 
 void sendClientRequest(const char *body, RType rtype) {
-    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype);
+    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype, Client.channelId,
+                CLIENT_DEBUG);
 }

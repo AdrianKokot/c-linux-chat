@@ -9,9 +9,14 @@ int main(int argc, char *argv[]) {
     printf("Hello %s!\n%s", Client.username, Messages.helpInstruction);
 
     char command[255];
+    int successfulRead;
     while (true) {
-        scanf("%255[^\n]", command);
+        successfulRead= scanf("%255[^\n]", command);
         clearStdin();
+
+        if(!successfulRead) {
+            continue;
+        }
 
         if (command[0] == '/') {
             if (executeCommand(command)) {

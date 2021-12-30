@@ -28,14 +28,14 @@ int main(int argc, char *argv[]) {
                 sprintf(Server.currentResponseBody, "%d", Server.nextUserQueueId++);
                 sendServerInitResponse(Server.currentResponseBody, StatusOK);
 
-                sleep(1);
+                msleep(100);
 
                 break;
             }
             case R_RegisterUser: {
 
                 if (Server.userCount >= MAX_USERS) {
-                    sendServerResponse("Server is full.", R_RegisterUser, StatusServerFull);
+                    sendServerResponse(Messages.serverIsFull, StatusServerFull);
                     break;
                 }
 
@@ -43,12 +43,12 @@ int main(int argc, char *argv[]) {
                 snprintf(requestedUsername, Server.currentRequest.bodyLength + 1, "%s", Server.currentRequest.body);
 
                 if (isUsernameUnique(requestedUsername)) {
-                    addUser(requestedUsername, Server.currentRequest.type);
-                    sendServerResponse("", R_RegisterUser, StatusOK);
+                    addUser(requestedUsername, Server.currentRequest.type, Server.currentRequest.responseType);
+                    sendServerResponse("", StatusOK);
                     break;
                 }
 
-                sendServerResponse("The given name is already taken.", R_RegisterUser, StatusValidationError);
+                sendServerResponse(Messages.nameTaken, StatusValidationError);
 
                 break;
             }
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
                 char channelListBody[] = "";
 
                 if (Server.channelCount == 0) {
-                    strcat(channelListBody, "There's no available channels.\n");
+                    strcat(channelListBody, Messages.noAvailableChannels);
                 } else {
-                    strcat(channelListBody, "Available channels:\n");
+                    strcat(channelListBody, Messages.availableChannels);
                     for (int i = 0; i < Server.channelCount; i++) {
                         char *channelName = malloc(sizeof(char) * 128);
                         snprintf(channelName, 128, "  - %s (%d active users)\n", Server.channels[i].name,
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                sendServerResponse(channelListBody, R_ListChannel, StatusOK);
+                sendServerResponse(channelListBody, StatusOK);
                 break;
             }
             case R_JoinChannel: {
@@ -76,18 +76,21 @@ int main(int argc, char *argv[]) {
                 char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
                 snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
 
-                if (joinChannel(requestedName)) {
-                    sendServerResponse("", R_JoinChannel, StatusOK);
+                int channelId = joinChannel(requestedName);
+
+                if (channelId == -1) {
+                    sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
                     break;
                 }
 
-                sendServerResponse("The given channel doesn't exist.", R_JoinChannel, StatusValidationError);
+                sprintf(Server.currentResponseBody, "%d", channelId);
+                sendServerResponse(Server.currentResponseBody, StatusOK);
                 break;
             }
             case R_CreateChannel: {
 
                 if (Server.channelCount >= MAX_CHANNELS) {
-                    sendServerResponse("Server is full.", R_CreateChannel, StatusServerFull);
+                    sendServerResponse(Messages.serverIsFull, StatusServerFull);
                     break;
                 }
 
@@ -96,11 +99,35 @@ int main(int argc, char *argv[]) {
 
                 if (isChannelNameUnique(requestedName)) {
                     addChannel(requestedName);
-                    sendServerResponse("", R_CreateChannel, StatusOK);
+                    sendServerResponse("", StatusOK);
                     break;
                 }
 
-                sendServerResponse("The given name is already taken.", R_CreateChannel, StatusValidationError);
+                sendServerResponse(Messages.nameTaken, StatusValidationError);
+                break;
+            }
+            case R_ChannelMessage: {
+
+                if (!doesChannelExistById(Server.currentRequest.channelId)) {
+                    sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
+                    break;
+                }
+
+                char *message = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+                snprintf(message, REQUEST_BODY_MAX_SIZE + 1, "%.*s", REQUEST_BODY_MAX_SIZE, Server.currentRequest.body);
+
+                sendChannelMessage(message, Server.currentRequest.channelId);
+                sendServerResponse("", StatusOK);
+                break;
+            }
+            case R_LeaveChannel: {
+
+                if (!leaveChannel()) {
+                    sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
+                    break;
+                }
+
+                sendServerResponse("", StatusOK);
                 break;
             }
         }

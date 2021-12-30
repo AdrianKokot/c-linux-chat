@@ -5,6 +5,7 @@
 
 #define MAX_USERS 5
 #define MAX_CHANNELS 10
+#define SERVER_DEBUG true
 
 struct serverConfig {
     char *cliHelp[5];
@@ -15,6 +16,12 @@ struct serverConfig ServerConfig;
 struct serverMessages {
     const char *queueIdRequirement;
     const char *queueIsTaken;
+    const char *channelDoesntExist;
+    const char *userDoesntExist;
+    const char *nameTaken;
+    const char *serverIsFull;
+    const char *noAvailableChannels;
+    const char *availableChannels;
 };
 
 struct serverMessages Messages;
@@ -25,6 +32,7 @@ struct {
     int userCount;
     struct {
         long id;
+        long connectionResponseId;
         char username[MAX_USERNAME];
         int channelId;
     } users[MAX_USERS];

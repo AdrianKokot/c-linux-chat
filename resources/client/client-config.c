@@ -7,6 +7,7 @@ struct clientConfig ClientConfig = {
                 "/ch, /channels", "Get list of available channels",
                 "/j, /join <name>", "Join a channel with the given name",
                 "/c, /create <name>", "Create a channel with the given name",
+                "/l, /leave", "Leave the currently connected channel",
                 "/e, /exit",             "Exits the app\n",
                 NULL
         },
@@ -29,7 +30,7 @@ struct clientMessages Messages = {
         "You are not connected to any channel.",
         "The given channel name is already taken.",
         "The server has maximum number of channels. Cannot create a new one.",
-        "Successfully created channel.",
+        "Successfully created channel",
         "Channel with the given name doesn't exist.",
         "Successfully joined the channel. ",
         "List of users:\n",
@@ -46,5 +47,6 @@ struct appCommandSignatures AppCommands = {
         {"/e", "/exit"},
         {"/ch", "/channels"},
         {"/j", "/join"},
-        {"/c", "/create"}
+        {"/c", "/create"},
+        {"/l", "/leave"}
 };

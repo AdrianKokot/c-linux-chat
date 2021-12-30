@@ -15,5 +15,11 @@ struct serverConfig ServerConfig = {
 
 struct serverMessages Messages = {
         "Please enter queue id for the server to listen to (hex without '0x'): ",
-        "Given queue is already taken."
+        "Given queue is already taken.",
+        "The given channel doesn't exist.",
+        "The given user doesn't exist.",
+        "The given name is already taken.",
+        "Server is full.",
+        "There's no available channels.\n",
+        "Available channels:\n"
 };
