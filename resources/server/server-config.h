@@ -22,6 +22,8 @@ struct serverMessages {
     const char *serverIsFull;
     const char *noAvailableChannels;
     const char *availableChannels;
+    const char *noUsers;
+    const char *listOfUsers;
 };
 
 struct serverMessages Messages;

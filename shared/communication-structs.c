@@ -8,8 +8,8 @@ const char *RTypeString[] = {
         [R_JoinChannel] = "R_JoinChannel",
         [R_LeaveChannel] = "R_LeaveChannel",
         [R_CreateChannel] = "R_CreateChannel",
-        [R_UserOnChannelList] = "R_UserOnChannelList",
-        [R_UserList] = "R_UserList",
+        [R_ListUsersOnChannel] = "R_ListUsersOnChannel",
+        [R_ListUsers] = "R_ListUsers",
         [R_ChannelMessage] = "R_ChannelMessage",
         [R_PrivateMessage] = "R_PrivateMessage"
 };

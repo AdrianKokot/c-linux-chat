@@ -21,8 +21,8 @@ enum eRType {
     R_JoinChannel,
     R_LeaveChannel,
     R_CreateChannel,
-    R_UserOnChannelList,
-    R_UserList,
+    R_ListUsersOnChannel,
+    R_ListUsers,
     R_ChannelMessage,
     R_PrivateMessage
 };

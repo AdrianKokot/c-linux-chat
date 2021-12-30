@@ -4,18 +4,20 @@
 struct clientConfig ClientConfig = {
         {
                 "/h, /help",  "Prints available commands",
-                "/ch, /channels", "Get list of available channels",
-                "/j, /join <name>", "Join a channel with the given name",
-                "/c, /create <name>", "Create a channel with the given name",
-                "/l, /leave", "Leave the currently connected channel",
-                "/e, /exit",             "Exits the app\n",
+                "/ch, /channels",        "Get list of available channels",
+                "/jn, /join <name>", "Join a channel with the given name",
+                "/cr, /create <name>", "Create a channel with the given name",
+                "/lv, /leave", "Leave the currently connected channel",
+                "/us, /users", "Get list of all users",
+                "/cu, /channel-users", "Get list of users on current channel",
+                "/e, /exit", "Exits the app\n",
                 NULL
         },
         {
                 "-h, --help", "Prints help",
                 "-u, --username <name>", "Starts app with the given username",
                 "-s, --server <id>",
-                "Starts app with connection to a server with the given id (should be hex without '0x')\n",
+                                    "Starts app with connection to a server with the given id (should be hex without '0x')\n",
                 NULL
         }
 };
@@ -43,10 +45,12 @@ struct clientCliCommandSignatures CliCommands = {
         {"-h", "--help"}
 };
 struct appCommandSignatures AppCommands = {
-        {"/h", "/help"},
-        {"/e", "/exit"},
+        {"/h",  "/help"},
+        {"/e",  "/exit"},
         {"/ch", "/channels"},
-        {"/j", "/join"},
-        {"/c", "/create"},
-        {"/l", "/leave"}
+        {"/jn", "/join"},
+        {"/cr", "/create"},
+        {"/lv", "/leave"},
+        {"/us", "/users"},
+        {"/cu", "/channel-users"}
 };

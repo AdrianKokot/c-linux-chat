@@ -192,6 +192,19 @@ int executeCommand(char command[255]) {
         return false;
     }
 
+    if (checkVSignature(command, AppCommands.users)) {
+        printf("%s\n", getListOfUsers(false));
+        return false;
+    }
+    if (checkVSignature(command, AppCommands.usersOnChannel)) {
+        if (Client.channelId == -1) {
+            printf("%s\n", Messages.notConnected);
+        } else {
+            printf("%s\n", getListOfUsers(true));
+        }
+        return false;
+    }
+
     printf("Unknown command. %s", Messages.helpInstruction);
 
     return false;
@@ -267,6 +280,19 @@ void terminateClient() {
 
 char *getListOfChannels() {
     sendClientRequest("", R_ListChannel);
+
+    Response response;
+    getResponse(&response);
+
+    char *body = malloc(sizeof(char) * response.bodyLength);
+
+    snprintf(body, response.bodyLength + 1, "%s", response.body);
+
+    return body;
+}
+
+char *getListOfUsers(bool onChannel) {
+    sendClientRequest("", onChannel ? R_ListUsersOnChannel : R_ListUsers);
 
     Response response;
     getResponse(&response);

@@ -130,6 +130,34 @@ int main(int argc, char *argv[]) {
                 sendServerResponse("", StatusOK);
                 break;
             }
+            case R_ListUsers: {
+                char listBody[] = "";
+
+                strcat(listBody, Messages.listOfUsers);
+                for (int i = 0; i < Server.userCount; i++) {
+                    strcat(listBody, "  - ");
+                    strcat(listBody, Server.users[i].username);
+                    strcat(listBody, "\n");
+                }
+
+                sendServerResponse(listBody, StatusOK);
+                break;
+            }
+            case R_ListUsersOnChannel: {
+                char listBody[] = "";
+
+                strcat(listBody, Messages.listOfUsers);
+                for (int i = 0; i < Server.userCount; i++) {
+                    if (Server.users[i].channelId == Server.currentRequest.channelId) {
+                        strcat(listBody, "  - ");
+                        strcat(listBody, Server.users[i].username);
+                        strcat(listBody, "\n");
+                    }
+                }
+
+                sendServerResponse(listBody, StatusOK);
+                break;
+            }
         }
 
     }

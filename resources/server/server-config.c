@@ -21,5 +21,7 @@ struct serverMessages Messages = {
         "The given name is already taken.",
         "Server is full.",
         "There's no available channels.\n",
-        "Available channels:\n"
+        "Available channels:\n",
+        "There's no users.\n",
+        "List of users:\n"
 };
