@@ -243,7 +243,17 @@ void sendMessageToChannel(char message[255]) {
     resetLine();
     sendClientRequest(message, R_ChannelMessage);
     Response response;
-    getResponse(&response);
+    msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId, 0);
+
+    if (CLIENT_DEBUG) {
+        printfDebug(
+                "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                "RESPONSE",
+                response.body, response.bodyLength,
+                RTypeString[response.rtype],
+                StatusCodeString[response.status],
+                response.type, response.responseType, response.channelId);
+    }
 
     if (response.status != StatusOK) {
         printf("Couldn't send a message.\n");

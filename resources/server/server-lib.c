@@ -173,37 +173,36 @@ bool doesChannelExistById(int id) {
 }
 
 void sendChannelMessage(const char *message, int id) {
-    int channelIdx, senderIdx;
-    for (channelIdx = 0; channelIdx < Server.channelCount; channelIdx++) {
-        if (Server.channels[channelIdx].id == id) {
-            break;
-        }
-    }
+    if (fork() == 0) {
 
-    for (senderIdx = 0; senderIdx < Server.userCount; senderIdx++) {
-        if (Server.users[senderIdx].id == Server.currentRequest.type) {
-            break;
-        }
-    }
-
-    for (int i = 0; i < Server.userCount; i++) {
-        if (Server.users[i].channelId == id) {
-            char *messageForUser = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
-
-            if (i == senderIdx) {
-
-                snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s]: %s", getTimeString(),
-                         Server.channels[channelIdx].name, message);
-            } else {
-                snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s] [%s]: %s", getTimeString(),
-                         Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
+        int channelIdx, senderIdx;
+        for (channelIdx = 0; channelIdx < Server.channelCount; channelIdx++) {
+            if (Server.channels[channelIdx].id == id) {
+                break;
             }
-
-            sendResponse(Server.queueId, Server.users[i].connectionResponseId + 1, messageForUser, R_ChannelMessage,
-                         StatusOK,
-                         id, SERVER_DEBUG);
         }
+
+        for (senderIdx = 0; senderIdx < Server.userCount; senderIdx++) {
+            if (Server.users[senderIdx].id == Server.currentRequest.type) {
+                break;
+            }
+        }
+        char *messageForUser = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+
+        snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s] [%s]: %s", getTimeString(),
+                 Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
+
+        for (int i = 0; i < Server.userCount; i++) {
+            if (Server.users[i].channelId == id) {
+
+                sendResponse(Server.queueId, Server.users[i].connectionResponseId + 1, messageForUser, R_ChannelMessage,
+                             StatusOK, id, SERVER_DEBUG);
+            }
+        }
+
+        kill(getpid(), SIGTERM);
     }
+
 
 }
 

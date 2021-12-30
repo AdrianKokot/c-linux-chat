@@ -13,8 +13,7 @@ int printHelp(char *title, char *commands[]) {
 }
 
 void resetScreen() {
-    if (!DEBUG)
-        printf("\e[1;1H\e[2J");
+    printf("\e[1;1H\e[2J");
 }
 
 void loadingScreen(double seconds) {
@@ -41,5 +40,6 @@ bool checkVSignature(const char *toCheck, const char *sig[2]) {
 }
 
 void resetLine() {
-    printf("\033[A\r\33[2K");
+//    printf("\033[A\r\33[2K");
+    printf("\033[A\33[2K\r");
 }
