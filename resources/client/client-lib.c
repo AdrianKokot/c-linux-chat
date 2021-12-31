@@ -1,5 +1,11 @@
 #include "client-lib.h"
 
+void loggedOut() {
+    resetScreen();
+    printf("You've been logged out.\n");
+    terminateClient();
+}
+
 void printCliHelp() {
     printHelp("Linux Chat App - Client\n\n", ClientConfig.cliHelp);
 }
@@ -8,9 +14,45 @@ void printAppHelp() {
     printHelp("Available commands:\n\n", ClientConfig.commandHelp);
 }
 
+void startListeningForHeartbeat() {
+    if (fork() == 0) {
+        long connectionId = Client.requestConnectionId + 2;
+        while (true) {
+            Request request;
+            msgrcv(Client.queueId, &request, REQUEST_SIZE, connectionId, 0);
+
+            if (CLIENT_DEBUG) {
+                printfDebug(
+                        "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                        "HEARTBEAT REQUEST",
+                        request.body, request.bodyLength,
+                        RTypeString[request.rtype],
+                        StatusCodeString[request.status],
+                        Client.queueId, request.type, request.responseType, request.channelId);
+            }
+
+            Response response = {request.responseType, "", StatusG, R_HeatBeat, 0, request.type, -1};
+
+            msgsnd(Client.queueId, &response, REQUEST_SIZE, 0);
+
+            if (CLIENT_DEBUG) {
+                printfDebug(
+                        "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                        "HEARTBEAT RESPONSE",
+                        response.body, response.bodyLength,
+                        RTypeString[response.rtype],
+                        StatusCodeString[response.status],
+                        Client.queueId, response.type, response.responseType, response.channelId);
+            }
+        }
+    }
+    return;
+}
+
 void init(int argc, char *argv[]) {
     Client.shouldPrintHelp = false;
     Client.channelId = -1;
+    Client.pid = getpid();
 
     struct appArguments {
         bool help;
@@ -83,6 +125,8 @@ void init(int argc, char *argv[]) {
         scanf("%255[^\n]s", Client.username);
         clearStdin();
     }
+
+    startListeningForHeartbeat();
 }
 
 void stopListeningForChannelMessages() {
@@ -94,10 +138,16 @@ void stopListeningForChannelMessages() {
 void startListeningForChannelMessages() {
     if ((Client.channelListeningChildPid = fork()) == 0) {
         while (true) {
+            if (!doesServerExist()) {
+                break;
+            }
+
             Response response;
             msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId + 1, 0);
             printf("%s\n", response.body);
         }
+
+        loggedOut();
     }
     return;
 }
@@ -275,7 +325,7 @@ void sendMessageToChannel(char message[255]) {
 
 void terminateClient() {
     signal(SIGINT, SIG_DFL);
-    kill(-getpid(), SIGINT);
+    kill(-Client.pid, SIGINT);
 }
 
 char *getListOfChannels() {
@@ -326,6 +376,10 @@ int getResponse(Response *response) {
                     response->type, response->responseType, response->channelId);
         }
 
+        if (response->status == StatusNotVerified) {
+            loggedOut();
+        }
+
         return size;
     }
 
@@ -333,6 +387,10 @@ int getResponse(Response *response) {
 }
 
 void sendClientRequest(const char *body, RType rtype) {
+    if (!doesServerExist()) {
+        loggedOut();
+    }
+
     sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype, Client.channelId,
                 CLIENT_DEBUG);
 }

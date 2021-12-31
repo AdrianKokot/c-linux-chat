@@ -11,7 +11,8 @@ const char *RTypeString[] = {
         [R_ListUsersOnChannel] = "R_ListUsersOnChannel",
         [R_ListUsers] = "R_ListUsers",
         [R_ChannelMessage] = "R_ChannelMessage",
-        [R_PrivateMessage] = "R_PrivateMessage"
+        [R_PrivateMessage] = "R_PrivateMessage",
+        [R_HeatBeat] = "R_HeatBeat"
 };
 
 const char *StatusCodeString[] = {
@@ -19,7 +20,8 @@ const char *StatusCodeString[] = {
         [StatusOK] = "StatusOK",
         [StatusServerFull] = "StatusServerFull",
         [StatusValidationError] = "StatusValidationError",
-        [StatusInternalError] = "StatusInternalError"
+        [StatusInternalError] = "StatusInternalError",
+        [StatusNotVerified] = "StatusNotVerified"
 };
 
 void
@@ -36,7 +38,7 @@ communicate(int messageQueueId, long type, long responseType, const char *body, 
 
     if (debug) {
         printfDebug(
-                "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                "SEND [%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
                 debugMessage,
                 request.body, request.bodyLength,
                 RTypeString[request.rtype],

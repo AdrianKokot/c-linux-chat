@@ -15,6 +15,7 @@ struct {
     long responseConnectionId;
     int queueId;
     int channelListeningChildPid;
+    int pid;
 } Client;
 
 struct clientConfig {

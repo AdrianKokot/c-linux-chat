@@ -10,7 +10,8 @@ typedef enum {
     StatusOK,
     StatusServerFull,
     StatusValidationError,
-    StatusInternalError
+    StatusInternalError,
+    StatusNotVerified
 } StatusCode;
 
 enum eRType {
@@ -24,7 +25,8 @@ enum eRType {
     R_ListUsersOnChannel,
     R_ListUsers,
     R_ChannelMessage,
-    R_PrivateMessage
+    R_PrivateMessage,
+    R_HeatBeat
 };
 
 typedef enum eRType RType;

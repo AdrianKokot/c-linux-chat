@@ -1,12 +1,24 @@
 #ifndef PUT_PSIW_UTILS_H
 #define PUT_PSIW_UTILS_H
 
+void resetScreen();
+
+void resetLine();
+
+void loadingScreen(double seconds);
+
 int msleep(unsigned int milliseconds);
+
 void printfDebug(const char *format, ...);
+
 void clearStdin();
 
-char* getTimeString();
+int printHelp(char *title, char *commands[]);
 
-char* repeat(char c, int n);
+bool checkVSignature(const char *toCheck, const char *signatures[2]);
+
+char *getTimeString();
+
+char *repeat(char c, int n);
 
 #endif //PUT_PSIW_UTILS_H

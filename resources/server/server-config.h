@@ -37,6 +37,7 @@ struct {
         long connectionResponseId;
         char username[MAX_USERNAME];
         int channelId;
+        time_t lastCheck;
     } users[MAX_USERS];
 
     int channelCount;

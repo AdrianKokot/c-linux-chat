@@ -1,6 +1,69 @@
 #include "server-lib.h"
 
+
+bool verifyUser(long userConnectionId, long userResponseConnectionId) {
+//    sendServerRequest("", userConnectionId + 2, userResponseConnectionId + 2, R_HeatBeat);
+    sendRequest(Server.queueId, userConnectionId + 2, userResponseConnectionId + 2, "", R_HeatBeat, -1, false);
+
+    msleep(10);
+    Response response;
+    int size = msgrcv(Server.queueId, &response, REQUEST_SIZE, userResponseConnectionId + 2, IPC_NOWAIT);
+
+    if (size != -1) {
+
+//        printfDebug(
+//                "[HEARTBEAT]\n\tBody: %s\n\tBody length: %lu\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %ld\n\tResponseConnectionId: %ld\n\tChannelId: %d\n\n",
+//                response.body,
+//                response.bodyLength,
+//                RTypeString[response.rtype],
+//                StatusCodeString[response.status],
+//                Server.queueId,
+//                response.type,
+//                response.responseType,
+//                response.channelId
+//        );
+        return true;
+    } else {
+//        printfDebug("[HEARTBEAT] MISSED!\n");
+        return false;
+    }
+
+}
+
+void verifyUsers() {
+    for (int i = 0; i < Server.userCount; i++) {
+        time_t now = time(NULL);
+
+        if (difftime(now, Server.users[i].lastCheck) >= 5) {
+            bool toRemoveUser = !verifyUser(Server.users[i].id, Server.users[i].connectionResponseId);
+
+            if (toRemoveUser) {
+
+                if (Server.users[i].channelId != -1) {
+                    for (int j = 0; j < Server.channelCount; j++) {
+                        if (Server.channels[j].id == Server.users[i].channelId) {
+                            Server.channels[j].userCount--;
+                            break;
+                        }
+                    }
+                }
+
+                for (int j = i + 1; j < Server.userCount; j++) {
+                    Server.users[j - 1] = Server.users[j];
+                }
+
+                Server.userCount--;
+                i--;
+            }
+        }
+    }
+}
+
 void terminateServer() {
+    for (int i = 0; i < Server.userCount; i++) {
+        sendResponse(Server.queueId, Server.users[i].id, "", R_Generic, StatusNotVerified,
+                     -1, SERVER_DEBUG);
+    }
     msgctl(Server.queueId, IPC_RMID, NULL);
     signal(SIGINT, SIG_DFL);
     kill(-getpid(), SIGINT);
@@ -94,6 +157,7 @@ bool isChannelNameUnique(char *name) {
 long addUser(char *username, long userId, long responseConnectionId) {
     Server.users[Server.userCount].id = userId;
     Server.users[Server.userCount].connectionResponseId = responseConnectionId;
+    Server.users[Server.userCount].lastCheck = time(NULL);
     strcpy(Server.users[Server.userCount].username, username);
     return Server.users[Server.userCount++].id;
 }
@@ -140,6 +204,10 @@ int joinChannel(char *channelName) {
 void sendServerResponse(const char *body, StatusCode status) {
     sendResponse(Server.queueId, Server.currentRequest.responseType, body, Server.currentRequest.rtype, status,
                  Server.currentRequest.channelId, SERVER_DEBUG);
+}
+
+void sendServerRequest(const char *body, long connectionId, long responseConnectionId, RType rtype) {
+    sendRequest(Server.queueId, connectionId, responseConnectionId, body, rtype, -1, SERVER_DEBUG);
 }
 
 void sendServerInitResponse(const char *body, StatusCode status) {
@@ -202,8 +270,6 @@ void sendChannelMessage(const char *message, int id) {
 
         kill(getpid(), SIGTERM);
     }
-
-
 }
 
 bool leaveChannel() {
@@ -234,4 +300,13 @@ bool leaveChannel() {
     Server.channels[channelIndex].userCount--;
     Server.users[userIndex].channelId = -1;
     return true;
+}
+
+bool isUserVerified() {
+    for (int i = 0; i < Server.userCount; i++) {
+        if (Server.currentRequest.type == Server.users[i].id) {
+            return true;
+        }
+    }
+    return false;
 }

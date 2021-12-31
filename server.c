@@ -25,7 +25,8 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                sprintf(Server.currentResponseBody, "%d", Server.nextUserQueueId++);
+                sprintf(Server.currentResponseBody, "%d", Server.nextUserQueueId);
+                Server.nextUserQueueId += 3;
                 sendServerInitResponse(Server.currentResponseBody, StatusOK);
 
                 msleep(100);
@@ -54,6 +55,11 @@ int main(int argc, char *argv[]) {
             }
             case R_ListChannel: {
 
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 char channelListBody[] = "";
 
                 if (Server.channelCount == 0) {
@@ -73,6 +79,11 @@ int main(int argc, char *argv[]) {
             }
             case R_JoinChannel: {
 
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
                 snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
 
@@ -88,6 +99,11 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_CreateChannel: {
+
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
 
                 if (Server.channelCount >= MAX_CHANNELS) {
                     sendServerResponse(Messages.serverIsFull, StatusServerFull);
@@ -108,6 +124,11 @@ int main(int argc, char *argv[]) {
             }
             case R_ChannelMessage: {
 
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 if (!doesChannelExistById(Server.currentRequest.channelId)) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
                     break;
@@ -122,6 +143,11 @@ int main(int argc, char *argv[]) {
             }
             case R_LeaveChannel: {
 
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 if (!leaveChannel()) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
                     break;
@@ -131,6 +157,12 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_ListUsers: {
+
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 char listBody[] = "";
 
                 strcat(listBody, Messages.listOfUsers);
@@ -144,6 +176,12 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_ListUsersOnChannel: {
+
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
                 char listBody[] = "";
 
                 strcat(listBody, Messages.listOfUsers);
@@ -160,6 +198,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        verifyUsers();
     }
 
     terminateServer();
