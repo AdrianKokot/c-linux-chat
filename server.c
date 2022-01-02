@@ -110,6 +110,11 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
+                if (Server.currentRequest.bodyLength <= 3) {
+                    sendServerResponse(Messages.channelNameRequirement, StatusValidationError);
+                    break;
+                }
+
                 char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
                 snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
 
@@ -137,7 +142,7 @@ int main(int argc, char *argv[]) {
                 char *message = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
                 snprintf(message, REQUEST_BODY_MAX_SIZE + 1, "%.*s", REQUEST_BODY_MAX_SIZE, Server.currentRequest.body);
 
-                sendChannelMessage(message, Server.currentRequest.channelId);
+                sendChannelMessage(message, Server.currentRequest.channelId, true);
                 sendServerResponse("", StatusOK);
                 break;
             }

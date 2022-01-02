@@ -23,5 +23,6 @@ struct serverMessages Messages = {
         "There's no available channels.\n",
         "Available channels:\n",
         "There's no users.\n",
-        "List of users:\n"
+        "List of users:\n",
+        "Channel name should have at least 4 characters."
 };

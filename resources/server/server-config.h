@@ -24,6 +24,7 @@ struct serverMessages {
     const char *availableChannels;
     const char *noUsers;
     const char *listOfUsers;
+    const char *channelNameRequirement;
 };
 
 struct serverMessages Messages;

@@ -20,14 +20,16 @@ int addChannel(char *name);
 int joinChannel(char *channelName);
 
 void sendServerResponse(const char *body, StatusCode status);
+
 void sendServerRequest(const char *body, long connectionId, long responseConnectionId, RType rtype);
+
 void sendServerInitResponse(const char *body, StatusCode status);
 
 void listenForRequest();
 
 bool doesChannelExistById(int id);
 
-void sendChannelMessage(const char *message, int id);
+void sendChannelMessage(const char *message, int id, bool format);
 
 bool leaveChannel();
 

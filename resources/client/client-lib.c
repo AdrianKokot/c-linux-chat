@@ -189,7 +189,7 @@ int executeCommand(char command[255]) {
         if (response.status == StatusServerFull) {
             printf("%s\n", Messages.serverChannelsFull);
         } else if (response.status == StatusValidationError) {
-            printf("%s\n", Messages.channelNameTaken);
+            printf("%s\n", response.body);
         } else {
             printf("%s '%s'.\n", Messages.channelCreated, channelName);
         }

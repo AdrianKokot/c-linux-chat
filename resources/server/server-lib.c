@@ -195,6 +195,12 @@ int joinChannel(char *channelName) {
         return channelId;
     }
 
+    char *channelMessage = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+    snprintf(channelMessage, REQUEST_BODY_MAX_SIZE, "[%s] [%s] User %s has joined the channel!", getTimeString(),
+             Server.channels[channelIndex].name, Server.users[userIndex].username);
+
+    sendChannelMessage(channelMessage, channelId, false);
+
     Server.channels[channelIndex].userCount++;
     Server.users[userIndex].channelId = channelId;
 
@@ -240,7 +246,7 @@ bool doesChannelExistById(int id) {
     return false;
 }
 
-void sendChannelMessage(const char *message, int id) {
+void sendChannelMessage(const char *message, int id, bool format) {
     if (fork() == 0) {
 
         int channelIdx, senderIdx;
@@ -257,8 +263,12 @@ void sendChannelMessage(const char *message, int id) {
         }
         char *messageForUser = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
 
-        snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s] [%s]: %s", getTimeString(),
-                 Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
+        if (format) {
+            snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s] [%s]: %s", getTimeString(),
+                     Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
+        } else {
+            snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "%s", message);
+        }
 
         for (int i = 0; i < Server.userCount; i++) {
             if (Server.users[i].channelId == id) {
