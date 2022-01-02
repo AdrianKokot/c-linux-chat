@@ -14,12 +14,11 @@ struct {
     long requestConnectionId;
     long responseConnectionId;
     int queueId;
-    int channelListeningChildPid;
     int pid;
 } Client;
 
 struct clientConfig {
-    char *commandHelp[19];
+    char *commandHelp[21];
     char *cliHelp[7];
 };
 
@@ -50,7 +49,7 @@ struct clientCliCommandSignatures {
     const char *help[2];
 };
 
-struct clientCliCommandSignatures CliCommands;
+extern struct clientCliCommandSignatures CliCommands;
 
 struct appCommandSignatures {
     const char *help[2];
@@ -61,8 +60,9 @@ struct appCommandSignatures {
     const char *leave[2];
     const char *users[2];
     const char *usersOnChannel[2];
+    const char *privateMessage[2];
 };
 
-struct appCommandSignatures AppCommands;
+extern struct appCommandSignatures AppCommands;
 
 #endif //PUT_PSIW_SERVER_CONFIG_H

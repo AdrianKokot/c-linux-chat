@@ -11,6 +11,7 @@ struct clientConfig ClientConfig = {
                 "/us, /users", "Get list of all users",
                 "/cu, /channel-users", "Get list of users on current channel",
                 "/cu, /channel-users <name>", "Get list of users on the channel with the given name",
+                "/priv, /private <username> <message>", "Sends private message to the user with the given name",
                 "/e, /exit", "Exits the app\n",
                 NULL
         },
@@ -33,7 +34,7 @@ struct clientMessages Messages = {
         "You are not connected to any channel.",
         "The given channel name is already taken.",
         "The server has maximum number of channels. Cannot create a new one.",
-        "Successfully created channel",
+        "Successfully created channel.\n",
         "Channel with the given name doesn't exist.",
         "Successfully joined the channel. ",
         "List of users:\n",
@@ -45,6 +46,7 @@ struct clientCliCommandSignatures CliCommands = {
         {"-s", "--server"},
         {"-h", "--help"}
 };
+
 struct appCommandSignatures AppCommands = {
         {"/h",  "/help"},
         {"/e",  "/exit"},
@@ -53,5 +55,6 @@ struct appCommandSignatures AppCommands = {
         {"/cr", "/create"},
         {"/lv", "/leave"},
         {"/us", "/users"},
-        {"/cu", "/channel-users"}
+        {"/cu", "/channel-users"},
+        {"/priv", "/private"}
 };

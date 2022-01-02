@@ -35,6 +35,7 @@ bool leaveChannel(long userId);
 
 bool isUserVerified();
 
+bool sendPrivateMessage(long fromId, long toId, const char* message);
 
 bool verifyUser(long userConnectionId, long userResponseConnectionId);
 

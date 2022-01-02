@@ -25,6 +25,9 @@ struct serverMessages {
     const char *noUsers;
     const char *listOfUsers;
     const char *channelNameRequirement;
+    const char *messageRequirement;
+    const char *couldntSendMessage;
+    const char *youCannotSendMessageToYourself;
 };
 
 struct serverMessages Messages;

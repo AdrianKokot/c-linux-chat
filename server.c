@@ -218,6 +218,57 @@ int main(int argc, char *argv[]) {
                 sendServerResponse(listBody, StatusOK);
                 break;
             }
+            case R_PrivateMessage: {
+
+                if (!isUserVerified()) {
+                    sendServerResponse("", StatusNotVerified);
+                    break;
+                }
+
+                char *username = malloc(sizeof(char) * MAX_USERNAME);
+                char *messagePtr = strchr(Server.currentRequest.body, ' ');
+
+                if (messagePtr == NULL) {
+                    sendServerResponse(Messages.messageRequirement, StatusValidationError);
+                    break;
+                }
+                char *message = malloc(sizeof(char) * 255);
+
+                strncpy(username, Server.currentRequest.body, (size_t) (messagePtr - Server.currentRequest.body));
+
+                snprintf(message, 256, "%.*s", 255, messagePtr + 1);
+
+                int userIndex;
+                for (userIndex = 0; userIndex < Server.userCount; userIndex++) {
+                    if (strcmp(Server.users[userIndex].username, username) == 0) {
+                        break;
+                    }
+                }
+
+                if (userIndex == Server.userCount) {
+                    sendServerResponse(Messages.userDoesntExist, StatusValidationError);
+                    break;
+                }
+
+                if (Server.users[userIndex].id == Server.currentRequest.type) {
+                    sendServerResponse(Messages.youCannotSendMessageToYourself, StatusValidationError);
+                    break;
+                }
+
+                if (strlen(message) == 0) {
+                    sendServerResponse(Messages.messageRequirement, StatusValidationError);
+                    break;
+                }
+
+                if (sendPrivateMessage(Server.currentRequest.type, Server.users[userIndex].id, message)) {
+                    sendServerResponse("", StatusOK);
+                    break;
+                }
+
+                sendServerResponse(Messages.couldntSendMessage, StatusValidationError);
+
+                break;
+            }
         }
 
         verifyUsers();

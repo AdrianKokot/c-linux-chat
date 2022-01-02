@@ -11,10 +11,10 @@ int main(int argc, char *argv[]) {
     char command[255];
     int successfulRead;
     while (true) {
-        successfulRead= scanf("%255[^\n]", command);
+        successfulRead = scanf("%255[^\n]", command);
         clearStdin();
 
-        if(!successfulRead) {
+        if (!successfulRead) {
             continue;
         }
 
@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
         } else if (Client.channelId != -1) {
             sendMessageToChannel(command);
         } else {
+            resetLine();
             printf("%s %s", Messages.notConnected, Messages.helpInstruction);
         }
     }

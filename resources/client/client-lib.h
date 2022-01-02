@@ -3,34 +3,12 @@
 
 #include "client-config.h"
 
-
-void printCliHelp();
-
-void printAppHelp();
-
-int executeCommand(char command[255]);
-
-void sendMessageToChannel(char message[255]);
-
-bool doesServerExist();
-
-bool canJoinServer();
-
-bool isUsernameUnique();
-
 void init(int argc, char *argv[]);
 
 void terminateClient();
 
-char *getListOfChannels();
+int executeCommand(char command[255]);
 
-char *getListOfUsers();
-
-char *getListOfUsersOnChannel(const char *channelName);
-
-int getResponse(Response *response);
-
-void sendClientRequest(const char *body, RType rtype);
-
+void sendMessageToChannel(char message[255]);
 
 #endif //PUT_PSIW_CLIENT_LIB_H

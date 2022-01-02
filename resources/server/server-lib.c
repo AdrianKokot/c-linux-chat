@@ -276,6 +276,33 @@ void sendChannelMessage(const char *message, int id, bool format) {
     }
 }
 
+bool sendPrivateMessage(long senderId, long receiverId, const char *message) {
+    int senderIndex = -1, receiverIndex = -1;
+
+    for (int i = 0; (senderIndex == -1 || receiverIndex == -1) && i < Server.userCount; i++) {
+        if (Server.users[i].id == senderId) {
+            senderIndex = i;
+        } else if (Server.users[i].id == receiverId) {
+            receiverIndex = i;
+        }
+    }
+
+    if (senderIndex == -1 || receiverIndex == -1) {
+        return false;
+    }
+
+    char *messageForUser = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+    snprintf(messageForUser, REQUEST_BODY_MAX_SIZE + 1, "[%s] [%s -> %s]: %s", getTimeString(),
+             Server.users[senderIndex].username, Server.users[receiverIndex].username, message);
+
+    sendResponse(Server.queueId, Server.users[receiverIndex].connectionResponseId + 1, messageForUser, R_PrivateMessage,
+                 StatusOK, -1, SERVER_DEBUG);
+    sendResponse(Server.queueId, Server.users[senderIndex].connectionResponseId + 1, messageForUser, R_PrivateMessage,
+                 StatusOK, -1, SERVER_DEBUG);
+
+    return true;
+}
+
 bool leaveChannel(long userId) {
     int userIndex = 0;
     for (; userIndex < Server.userCount; userIndex++) {
