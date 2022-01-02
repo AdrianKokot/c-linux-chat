@@ -31,7 +31,7 @@ bool doesChannelExistById(int id);
 
 void sendChannelMessage(const char *message, int id, bool format);
 
-bool leaveChannel();
+bool leaveChannel(long userId);
 
 bool isUserVerified();
 

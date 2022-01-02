@@ -40,12 +40,7 @@ void verifyUsers() {
             if (toRemoveUser) {
 
                 if (Server.users[i].channelId != -1) {
-                    for (int j = 0; j < Server.channelCount; j++) {
-                        if (Server.channels[j].id == Server.users[i].channelId) {
-                            Server.channels[j].userCount--;
-                            break;
-                        }
-                    }
+                    leaveChannel(Server.users[i].id);
                 }
 
                 for (int j = i + 1; j < Server.userCount; j++) {
@@ -282,10 +277,10 @@ void sendChannelMessage(const char *message, int id, bool format) {
     }
 }
 
-bool leaveChannel() {
+bool leaveChannel(long userId) {
     int userIndex = 0;
     for (; userIndex < Server.userCount; userIndex++) {
-        if (Server.users[userIndex].id == Server.currentRequest.type) {
+        if (Server.users[userIndex].id == userId) {
             break;
         }
     }
@@ -309,6 +304,13 @@ bool leaveChannel() {
 
     Server.channels[channelIndex].userCount--;
     Server.users[userIndex].channelId = -1;
+
+    char *channelMessage = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+    snprintf(channelMessage, REQUEST_BODY_MAX_SIZE, "[%s] [%s] User %s has left the channel!", getTimeString(),
+             Server.channels[channelIndex].name, Server.users[userIndex].username);
+
+    sendChannelMessage(channelMessage, channelId, false);
+
     return true;
 }
 

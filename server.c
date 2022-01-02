@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                if (!leaveChannel()) {
+                if (!leaveChannel(Server.currentRequest.type)) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
                     break;
                 }
