@@ -19,7 +19,7 @@ struct {
 } Client;
 
 struct clientConfig {
-    char *commandHelp[17];
+    char *commandHelp[19];
     char *cliHelp[7];
 };
 

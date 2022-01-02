@@ -2,7 +2,6 @@
 
 
 bool verifyUser(long userConnectionId, long userResponseConnectionId) {
-//    sendServerRequest("", userConnectionId + 2, userResponseConnectionId + 2, R_HeatBeat);
     sendRequest(Server.queueId, userConnectionId + 2, userResponseConnectionId + 2, "", R_HeatBeat, -1, false);
 
     msleep(10);

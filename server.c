@@ -187,11 +187,28 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
+                int channelIdToCheck = -1;
+                if (Server.currentRequest.bodyLength > 0) {
+                    for (int i = 0; i < Server.channelCount; i++) {
+                        if (strncmp(Server.channels[i].name, Server.currentRequest.body, MAX_CHANNEL_NAME) == 0) {
+                            channelIdToCheck = Server.channels[i].id;
+                            break;
+                        }
+                    }
+                } else {
+                    channelIdToCheck = Server.currentRequest.channelId;
+                }
+
+                if (channelIdToCheck == -1) {
+                    sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
+                    break;
+                }
+
                 char listBody[] = "";
 
                 strcat(listBody, Messages.listOfUsers);
                 for (int i = 0; i < Server.userCount; i++) {
-                    if (Server.users[i].channelId == Server.currentRequest.channelId) {
+                    if (Server.users[i].channelId == channelIdToCheck) {
                         strcat(listBody, "  - ");
                         strcat(listBody, Server.users[i].username);
                         strcat(listBody, "\n");

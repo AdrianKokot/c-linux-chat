@@ -243,15 +243,27 @@ int executeCommand(char command[255]) {
     }
 
     if (checkVSignature(command, AppCommands.users)) {
-        printf("%s\n", getListOfUsers(false));
+        printf("%s\n", getListOfUsers());
         return false;
     }
     if (checkVSignature(command, AppCommands.usersOnChannel)) {
-        if (Client.channelId == -1) {
-            printf("%s\n", Messages.notConnected);
-        } else {
-            printf("%s\n", getListOfUsers(true));
+
+        char *channelName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
+
+        for (int i = 2; i < strlen(command); i++) {
+            if (command[i] == ' ') {
+                strncpy(channelName, command + i + 1, MAX_CHANNEL_NAME);
+                break;
+            }
         }
+
+        if (strlen(channelName) == 0 && Client.channelId == -1) {
+            printf("%s\n", Messages.notConnected);
+            return false;
+        }
+
+        printf("%s\n", getListOfUsersOnChannel(channelName));
+
         return false;
     }
 
@@ -341,8 +353,26 @@ char *getListOfChannels() {
     return body;
 }
 
-char *getListOfUsers(bool onChannel) {
-    sendClientRequest("", onChannel ? R_ListUsersOnChannel : R_ListUsers);
+char *getListOfUsers() {
+    sendClientRequest("", R_ListUsers);
+
+    Response response;
+    getResponse(&response);
+
+    char *body = malloc(sizeof(char) * response.bodyLength);
+
+    snprintf(body, response.bodyLength + 1, "%s", response.body);
+
+    return body;
+}
+
+char *getListOfUsersOnChannel(const char *channelName) {
+    if (strlen(channelName) == 0) {
+        sendClientRequest("", R_ListUsersOnChannel);
+    } else {
+        sendClientRequest(channelName, R_ListUsersOnChannel);
+
+    }
 
     Response response;
     getResponse(&response);

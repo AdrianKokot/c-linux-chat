@@ -4,23 +4,29 @@
 #include "client-config.h"
 
 
-
 void printCliHelp();
+
 void printAppHelp();
 
 int executeCommand(char command[255]);
+
 void sendMessageToChannel(char message[255]);
 
 bool doesServerExist();
+
 bool canJoinServer();
+
 bool isUsernameUnique();
 
 void init(int argc, char *argv[]);
 
 void terminateClient();
 
-char* getListOfChannels();
-char* getListOfUsers(bool onChannel);
+char *getListOfChannels();
+
+char *getListOfUsers();
+
+char *getListOfUsersOnChannel(const char *channelName);
 
 int getResponse(Response *response);
 

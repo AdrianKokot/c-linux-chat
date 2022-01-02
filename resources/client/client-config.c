@@ -10,6 +10,7 @@ struct clientConfig ClientConfig = {
                 "/lv, /leave", "Leave the currently connected channel",
                 "/us, /users", "Get list of all users",
                 "/cu, /channel-users", "Get list of users on current channel",
+                "/cu, /channel-users <name>", "Get list of users on the channel with the given name",
                 "/e, /exit", "Exits the app\n",
                 NULL
         },
