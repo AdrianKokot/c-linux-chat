@@ -19,7 +19,7 @@ struct clientConfig ClientConfig = {
                 "-h, --help", "Prints help",
                 "-u, --username <name>", "Starts app with the given username",
                 "-s, --server <id>",
-                                    "Starts app with connection to a server with the given id (should be hex without '0x')\n",
+                                     "Starts app with connection to a server with the given id (should be hex without '0x')\n",
                 NULL
         }
 };
@@ -32,13 +32,9 @@ struct clientMessages Messages = {
         "Please enter your username: ",
         "The given username is already taken. Please enter different username: ",
         "You are not connected to any channel.",
-        "The given channel name is already taken.",
         "The server has maximum number of channels. Cannot create a new one.",
-        "Successfully created channel.\n",
-        "Channel with the given name doesn't exist.",
-        "Successfully joined the channel. ",
-        "List of users:\n",
-        "List of users on this channel:\n"
+        "Successfully created channel",
+        "Channel with the given name doesn't exist."
 };
 
 struct clientCliCommandSignatures CliCommands = {
@@ -48,13 +44,13 @@ struct clientCliCommandSignatures CliCommands = {
 };
 
 struct appCommandSignatures AppCommands = {
-        {"/h",  "/help"},
-        {"/e",  "/exit"},
-        {"/ch", "/channels"},
-        {"/jn", "/join"},
-        {"/cr", "/create"},
-        {"/lv", "/leave"},
-        {"/us", "/users"},
-        {"/cu", "/channel-users"},
+        {"/h",    "/help"},
+        {"/e",    "/exit"},
+        {"/ch",   "/channels"},
+        {"/jn",   "/join"},
+        {"/cr",   "/create"},
+        {"/lv",   "/leave"},
+        {"/us",   "/users"},
+        {"/cu",   "/channel-users"},
         {"/priv", "/private"}
 };
