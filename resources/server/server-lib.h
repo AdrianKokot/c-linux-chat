@@ -41,4 +41,6 @@ void verifyUsers();
 
 bool sendChannelHistory(long userId, int channelId);
 
+void unregisterUserById(long userId);
+
 #endif //PUT_PSIW_SERVER_LIB_H

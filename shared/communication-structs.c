@@ -4,6 +4,7 @@ const char *RTypeString[] = {
         [R_Generic] = "R_Generic",
         [R_Init] = "R_Init",
         [R_RegisterUser] = "R_RegisterUser",
+        [R_UnregisterUser] = "R_UnregisterUser",
         [R_ListChannel] = "R_ListChannel",
         [R_JoinChannel] = "R_JoinChannel",
         [R_LeaveChannel] = "R_LeaveChannel",

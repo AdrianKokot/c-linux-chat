@@ -255,7 +255,7 @@ int executeCommand(char command[255]) {
 
     if (checkVSignature(command, AppCommands.exit)) {
         if (Client.channelId != -1) {
-            sendClientRequest("", R_LeaveChannel);
+            sendClientRequest("", R_UnregisterUser);
         }
 
         resetScreen();

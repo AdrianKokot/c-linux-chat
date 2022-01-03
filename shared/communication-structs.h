@@ -19,6 +19,7 @@ enum eRType {
     R_Generic,
     R_Init,
     R_RegisterUser,
+    R_UnregisterUser,
     R_ListChannel,
     R_JoinChannel,
     R_LeaveChannel,

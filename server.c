@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
             default: {
                 break;
             }
-             case R_Init: {
+            case R_Init: {
                 if (Server.userCount >= MAX_USERS) {
                     sendServerInitResponse("", StatusServerFull);
                     break;
@@ -51,6 +51,10 @@ int main(int argc, char *argv[]) {
 
                 sendServerResponse(Messages.nameTaken, StatusValidationError);
 
+                break;
+            }
+            case R_UnregisterUser: {
+                unregisterUserById(Server.currentRequest.type);
                 break;
             }
             case R_ListChannel: {

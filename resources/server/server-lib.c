@@ -28,6 +28,27 @@ bool verifyUser(long userConnectionId, long userResponseConnectionId) {
 
 }
 
+void unregisterUser(int userIndex) {
+    if (Server.users[userIndex].channelId != -1) {
+        leaveChannel(Server.users[userIndex].id);
+    }
+
+    for (int j = userIndex + 1; j < Server.userCount; j++) {
+        Server.users[j - 1] = Server.users[j];
+    }
+
+    Server.userCount--;
+}
+
+void unregisterUserById(long userId) {
+    for(int i = 0; i < Server.userCount; i++) {
+        if(Server.users[i].id == userId) {
+            return unregisterUser(i);
+        }
+    }
+}
+
+
 void verifyUsers() {
     for (int i = 0; i < Server.userCount; i++) {
         time_t now = time(NULL);
@@ -36,16 +57,7 @@ void verifyUsers() {
             bool toRemoveUser = !verifyUser(Server.users[i].id, Server.users[i].connectionResponseId);
 
             if (toRemoveUser) {
-
-                if (Server.users[i].channelId != -1) {
-                    leaveChannel(Server.users[i].id);
-                }
-
-                for (int j = i + 1; j < Server.userCount; j++) {
-                    Server.users[j - 1] = Server.users[j];
-                }
-
-                Server.userCount--;
+                unregisterUser(i);
                 i--;
             }
         }
