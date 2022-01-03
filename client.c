@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     int successfulRead;
     while (true) {
         successfulRead = scanf("%255[^\n]", command);
+        resetLine();
         clearStdin();
 
         if (!successfulRead) {
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
         } else if (Client.channelId != -1) {
             sendMessageToChannel(command);
         } else {
-            resetLine();
+
             printf("%s %s", Messages.notConnected, Messages.helpInstruction);
         }
     }

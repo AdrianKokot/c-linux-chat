@@ -1,6 +1,9 @@
 #include "client-lib.h"
 
 void terminateClient() {
+    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, "", R_UnregisterUser, Client.channelId,
+                CLIENT_DEBUG);
+
     signal(SIGINT, SIG_DFL);
     kill(-Client.pid, SIGINT);
 }
@@ -45,35 +48,23 @@ bool canJoinServer() {
 }
 
 int getResponse(Response *response) {
-    int childId;
+    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
 
-    if ((childId = fork()) == 0) {
-        loadingScreen(100);
-        kill(childId, SIGTERM);
-
-    } else {
-        int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
-        kill(childId, SIGTERM);
-        resetLine();
-
-        if (CLIENT_DEBUG) {
-            printfDebug(
-                    "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                    "RESPONSE",
-                    response->body, response->bodyLength,
-                    RTypeString[response->rtype],
-                    StatusCodeString[response->status],
-                    response->type, response->responseType, response->channelId);
-        }
-
-        if (response->status == StatusNotVerified) {
-            loggedOut();
-        }
-
-        return size;
+    if (CLIENT_DEBUG) {
+        printfDebug(
+                "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                "RESPONSE",
+                response->body, response->bodyLength,
+                RTypeString[response->rtype],
+                StatusCodeString[response->status],
+                response->type, response->responseType, response->channelId);
     }
 
-    return -1;
+    if (response->status == StatusNotVerified) {
+        loggedOut();
+    }
+
+    return size;
 }
 
 void sendClientRequest(const char *body, RType rtype) {
@@ -143,6 +134,7 @@ void startListeningForMessages() {
 
             Response response;
             msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId + 1, 0);
+            msleep(10);
             printf("%s\n", response.body);
         }
 
@@ -160,7 +152,6 @@ bool isUsernameUnique() {
 }
 
 void sendMessageToChannel(char message[255]) {
-    resetLine();
     sendClientRequest(message, R_ChannelMessage);
     Response response;
     msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId, 0);
@@ -227,7 +218,6 @@ char *getListOfUsersOnChannel(const char *channelName) {
 int executeCommand(char command[255]) {
 
     if (checkVSignature(command, AppCommands.privateMessage)) {
-        resetLine();
 
         char *userAndMessage = malloc(sizeof(char) * MAX_CHANNEL_NAME);
 
@@ -254,10 +244,7 @@ int executeCommand(char command[255]) {
 
 
     if (checkVSignature(command, AppCommands.exit)) {
-        if (Client.channelId != -1) {
             sendClientRequest("", R_UnregisterUser);
-        }
-
         resetScreen();
         printf("Exiting..\n");
         return true;

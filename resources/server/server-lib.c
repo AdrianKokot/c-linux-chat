@@ -341,6 +341,9 @@ bool sendChannelHistory(long userId, int channelId) {
     }
 
     char *historyMessage = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
+    memset(historyMessage, 0, REQUEST_BODY_MAX_SIZE);
+
+
 
     for (int i = Server.channels[channelIndex].historyLength - 1; i >= 0; i--) {
         if (strlen(Server.channels[channelIndex].history[i]) > 0) {
