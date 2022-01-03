@@ -5,6 +5,7 @@
 
 #define MAX_USERS 5
 #define MAX_CHANNELS 10
+#define CHANNEL_HISTORY_SIZE 10
 #define SERVER_DEBUG true
 
 struct serverConfig {
@@ -49,6 +50,8 @@ struct {
         int id;
         char name[MAX_CHANNEL_NAME];
         int userCount;
+        char history[CHANNEL_HISTORY_SIZE][MESSAGE_MAX_SIZE];
+        int historyLength;
     } channels[MAX_CHANNELS];
 
     int nextUserQueueId;

@@ -21,8 +21,6 @@ int joinChannel(char *channelName);
 
 void sendServerResponse(const char *body, StatusCode status);
 
-void sendServerRequest(const char *body, long connectionId, long responseConnectionId, RType rtype);
-
 void sendServerInitResponse(const char *body, StatusCode status);
 
 void listenForRequest();
@@ -40,5 +38,7 @@ bool sendPrivateMessage(long fromId, long toId, const char* message);
 bool verifyUser(long userConnectionId, long userResponseConnectionId);
 
 void verifyUsers();
+
+bool sendChannelHistory(long userId, int channelId);
 
 #endif //PUT_PSIW_SERVER_LIB_H

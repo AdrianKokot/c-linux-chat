@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
             default: {
                 break;
             }
-            case R_Init: {
+             case R_Init: {
                 if (Server.userCount >= MAX_USERS) {
                     sendServerInitResponse("", StatusServerFull);
                     break;
@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 
                 sprintf(Server.currentResponseBody, "%d", channelId);
                 sendServerResponse(Server.currentResponseBody, StatusOK);
+                sendChannelHistory(Server.currentRequest.type, channelId);
                 break;
             }
             case R_CreateChannel: {
@@ -139,8 +140,8 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                char *message = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
-                snprintf(message, REQUEST_BODY_MAX_SIZE + 1, "%.*s", REQUEST_BODY_MAX_SIZE, Server.currentRequest.body);
+                char *message = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
+                snprintf(message, MESSAGE_MAX_SIZE + 1, "%.*s", MESSAGE_MAX_SIZE, Server.currentRequest.body);
 
                 sendChannelMessage(message, Server.currentRequest.channelId, true);
                 sendServerResponse("", StatusOK);

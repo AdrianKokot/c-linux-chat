@@ -4,7 +4,7 @@
 #define DEBUG true
 #define RESET_SCREENS true
 #define MAX_CHANNEL_NAME 32
-#define MAX_USERNAME 255
+#define MAX_USERNAME 32
 
 #include <limits.h>
 #include <stdbool.h>
