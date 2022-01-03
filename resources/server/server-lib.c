@@ -201,7 +201,7 @@ int joinChannel(char *channelName) {
     }
 
     char *channelMessage = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[%s] [%s] User %s has joined the channel!", getTimeString(),
+    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has joined the channel!", getTimeString(),
              Server.channels[channelIndex].name, Server.users[userIndex].username);
 
     sendChannelMessage(channelMessage, channelId, false);
@@ -264,7 +264,7 @@ void sendChannelMessage(const char *message, int id, bool format) {
     char *messageForUser = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
 
     if (format) {
-        snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[%s] [%s] [%s]: %s", getTimeString(),
+        snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[34m%s\033[m] [\033[32m%s\033[m]: %s", getTimeString(),
                  Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
     } else {
         snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "%s", message);
@@ -310,7 +310,7 @@ bool sendPrivateMessage(long senderId, long receiverId, const char *message) {
     }
 
     char *messageForUser = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[%s] [%s -> %s]: %s", getTimeString(),
+    snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[32m%s\033[m -> \033[32m%s\033[m]: %s", getTimeString(),
              Server.users[senderIndex].username, Server.users[receiverIndex].username, message);
 
     sendResponse(Server.queueId, Server.users[receiverIndex].connectionResponseId + 1, messageForUser, R_PrivateMessage,
@@ -347,7 +347,6 @@ bool sendChannelHistory(long userId, int channelId) {
 
     for (int i = Server.channels[channelIndex].historyLength - 1; i >= 0; i--) {
         if (strlen(Server.channels[channelIndex].history[i]) > 0) {
-            printf("History: %s\n", Server.channels[channelIndex].history[i]);
             strcat(historyMessage, Server.channels[channelIndex].history[i]);
             strcat(historyMessage, "\n");
         }
@@ -390,7 +389,7 @@ bool leaveChannel(long userId) {
     Server.users[userIndex].channelId = -1;
 
     char *channelMessage = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[%s] [%s] User %s has left the channel!", getTimeString(),
+    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has left the channel!", getTimeString(),
              Server.channels[channelIndex].name, Server.users[userIndex].username);
 
     sendChannelMessage(channelMessage, channelId, false);

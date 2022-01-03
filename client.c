@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, terminateClient);
 
     resetScreen();
-    printf("Hello %s!\n%s", Client.username, Messages.helpInstruction);
+    printf("Hello \033[32m%s\033[m!\n%s", Client.username, Messages.helpInstruction);
 
     char command[255];
     int successfulRead;
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
             sendMessageToChannel(command);
         } else {
 
-            printf("%s %s", Messages.notConnected, Messages.helpInstruction);
+            printf("\033[31m%s\033[m %s", Messages.notConnected, Messages.helpInstruction);
         }
     }
 

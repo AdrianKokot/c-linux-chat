@@ -1,7 +1,8 @@
 #include "client-lib.h"
 
 void terminateClient() {
-    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, "", R_UnregisterUser, Client.channelId,
+    sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, "", R_UnregisterUser,
+                Client.channelId,
                 CLIENT_DEBUG);
 
     signal(SIGINT, SIG_DFL);
@@ -10,7 +11,7 @@ void terminateClient() {
 
 void loggedOut() {
     resetScreen();
-    printf("You've been logged out.\n");
+    printf("\033[31m%s\033[m\n", "You've been logged out.");
     terminateClient();
 }
 
@@ -27,7 +28,7 @@ bool canJoinServer() {
     int id = msgget(Client.serverId, 0644 | IPC_EXCL);
 
     if (id == -1) {
-        printf("Error during connection\n");
+        printf("\033[31m%s\033[m\n", "Error during connection");
         return false;
     }
 
@@ -47,18 +48,19 @@ bool canJoinServer() {
     return true;
 }
 
-int getResponse(Response *response) {
-    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
-
+void printfRDebug(Request *r, const char *title) {
     if (CLIENT_DEBUG) {
         printfDebug(
                 "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                "RESPONSE",
-                response->body, response->bodyLength,
-                RTypeString[response->rtype],
-                StatusCodeString[response->status],
-                response->type, response->responseType, response->channelId);
+                title, r->body, r->bodyLength, RTypeString[r->rtype], StatusCodeString[r->status], r->type,
+                r->responseType, r->channelId);
     }
+}
+
+int getResponse(Response *response) {
+    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
+
+    printfRDebug(response, "RESPONSE");
 
     if (response->status == StatusNotVerified) {
         loggedOut();
@@ -96,29 +98,13 @@ void startListeningForHeartbeat() {
             Request request;
             msgrcv(Client.queueId, &request, REQUEST_SIZE, connectionId, 0);
 
-            if (CLIENT_DEBUG) {
-                printfDebug(
-                        "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                        "HEARTBEAT REQUEST",
-                        request.body, request.bodyLength,
-                        RTypeString[request.rtype],
-                        StatusCodeString[request.status],
-                        Client.queueId, request.type, request.responseType, request.channelId);
-            }
+            printfRDebug(&request, "HEARTBEAT REQUEST");
 
             Response response = {request.responseType, "", StatusG, R_HeatBeat, 0, request.type, -1};
 
             msgsnd(Client.queueId, &response, REQUEST_SIZE, 0);
 
-            if (CLIENT_DEBUG) {
-                printfDebug(
-                        "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                        "HEARTBEAT RESPONSE",
-                        response.body, response.bodyLength,
-                        RTypeString[response.rtype],
-                        StatusCodeString[response.status],
-                        Client.queueId, response.type, response.responseType, response.channelId);
-            }
+            printfRDebug(&response, "HEARTBEAT RESPONSE");
         }
 
         loggedOut();
@@ -156,15 +142,7 @@ void sendMessageToChannel(char message[255]) {
     Response response;
     msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId, 0);
 
-    if (CLIENT_DEBUG) {
-        printfDebug(
-                "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                "RESPONSE",
-                response.body, response.bodyLength,
-                RTypeString[response.rtype],
-                StatusCodeString[response.status],
-                response.type, response.responseType, response.channelId);
-    }
+    printfRDebug(&response, "RESPONSE");
 
     if (response.status != StatusOK) {
         printf("Couldn't send a message.\n");
@@ -236,7 +214,7 @@ int executeCommand(char command[255]) {
         if (response.status == StatusNotVerified) {
             loggedOut();
         } else if (response.status != StatusOK) {
-            printf("%s\n", response.body);
+            printf("\033[31m%s\033[m\n", response.body);
         }
 
         return false;
@@ -244,7 +222,7 @@ int executeCommand(char command[255]) {
 
 
     if (checkVSignature(command, AppCommands.exit)) {
-            sendClientRequest("", R_UnregisterUser);
+        sendClientRequest("", R_UnregisterUser);
         resetScreen();
         printf("Exiting..\n");
         return true;
@@ -276,11 +254,11 @@ int executeCommand(char command[255]) {
         getResponse(&response);
 
         if (response.status == StatusServerFull) {
-            printf("%s\n", Messages.serverChannelsFull);
+            printf("\033[31m%s\033[m\n", Messages.serverChannelsFull);
         } else if (response.status == StatusValidationError) {
-            printf("%s\n", response.body);
+            printf("\033[31m%s\033[m\n", response.body);
         } else {
-            printf("%s '%s'.\n", Messages.channelCreated, channelName);
+            printf("\033[33m%s\033[m '\033[34m%s\033[m'\033[33m .\033[m\n", Messages.channelCreated, channelName);
         }
 
         return false;
@@ -302,11 +280,10 @@ int executeCommand(char command[255]) {
         getResponse(&response);
 
         if (response.status == StatusValidationError) {
-            printf("%s\n", Messages.channelDoesntExist);
+            printf("\033[31m%s\033[m\n", Messages.channelDoesntExist);
         } else {
             Client.channelId = (int) strtol(response.body, NULL, 10);
             Client.channelName = channelName;
-            printf("Successfully joined '%s' channel.\n\n", channelName);
         }
 
         return false;
@@ -320,10 +297,10 @@ int executeCommand(char command[255]) {
         getResponse(&response);
 
         if (response.status == StatusValidationError) {
-            printf("%s\n", Messages.notConnected);
+            printf("\033[31m%s\033[m\n", Messages.notConnected);
         } else {
             Client.channelId = -1;
-            printf("Successfully left channel.\n\n");
+            printf("\033[33m%s\033[m\n", "Successfully left channel.");
         }
 
         return false;
@@ -346,7 +323,7 @@ int executeCommand(char command[255]) {
         }
 
         if (strlen(channelName) == 0 && Client.channelId == -1) {
-            printf("%s\n", Messages.notConnected);
+            printf("\033[31m%s\033[m\n", Messages.notConnected);
             return false;
         }
 
@@ -355,7 +332,7 @@ int executeCommand(char command[255]) {
         return false;
     }
 
-    printf("Unknown command. %s", Messages.helpInstruction);
+    printf("\033[31m%s\033[m %s","Unknown command.", Messages.helpInstruction);
 
     return false;
 }
@@ -405,7 +382,7 @@ void init(int argc, char *argv[]) {
     }
 
     if (!arguments.server) {
-        printf("%s", Messages.serverIdRequirement);
+        printf("\033[31m%s\033[m", Messages.serverIdRequirement);
         scanf("%x", &Client.serverId);
         clearStdin();
     }
@@ -419,20 +396,20 @@ void init(int argc, char *argv[]) {
         validConnection = serverExists && canJoin;
 
         if (!validConnection) {
-            printf("%s", serverExists ? Messages.serverFull : Messages.serverDoesntExist);
+            printf("\033[31m%s\033[m", serverExists ? Messages.serverFull : Messages.serverDoesntExist);
             scanf("%x", &Client.serverId);
             clearStdin();
         }
     }
 
     if (!arguments.username) {
-        printf("%s", Messages.askUsername);
+        printf("\033[31m%s\033[m", Messages.askUsername);
         scanf("%255[^\n]s", Client.username);
         clearStdin();
     }
 
     while (!isUsernameUnique()) {
-        printf("%s", Messages.chooseDifferentUsername);
+        printf("\033[31m%s\033[m", Messages.chooseDifferentUsername);
         scanf("%255[^\n]s", Client.username);
         clearStdin();
     }

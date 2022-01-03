@@ -177,9 +177,9 @@ int main(int argc, char *argv[]) {
 
                 strcat(listBody, Messages.listOfUsers);
                 for (int i = 0; i < Server.userCount; i++) {
-                    strcat(listBody, "  - ");
+                    strcat(listBody, "  - \033[34m");
                     strcat(listBody, Server.users[i].username);
-                    strcat(listBody, "\n");
+                    strcat(listBody, "\033[m\n");
                 }
 
                 sendServerResponse(listBody, StatusOK);
@@ -214,9 +214,9 @@ int main(int argc, char *argv[]) {
                 strcat(listBody, Messages.listOfUsers);
                 for (int i = 0; i < Server.userCount; i++) {
                     if (Server.users[i].channelId == channelIdToCheck) {
-                        strcat(listBody, "  - ");
+                        strcat(listBody, "  - \033[34m");
                         strcat(listBody, Server.users[i].username);
-                        strcat(listBody, "\n");
+                        strcat(listBody, "\033[m\n");
                     }
                 }
 
@@ -231,21 +231,27 @@ int main(int argc, char *argv[]) {
                 }
 
                 char *username = malloc(sizeof(char) * MAX_USERNAME);
-                char *messagePtr = strchr(Server.currentRequest.body, ' ');
+                char *message = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
 
-                if (messagePtr == NULL) {
-                    sendServerResponse(Messages.messageRequirement, StatusValidationError);
-                    break;
+                for (int i = 0; i < Server.currentRequest.bodyLength; i++) {
+                    if (Server.currentRequest.body[i] == ' ') {
+                        strncpy(username, Server.currentRequest.body, i+1 > MAX_USERNAME ? MAX_USERNAME : i+1);
+                        strncpy(message, Server.currentRequest.body + i + 1, MESSAGE_MAX_SIZE);
+                        break;
+                    }
                 }
-                char *message = malloc(sizeof(char) * 255);
 
-                strncpy(username, Server.currentRequest.body, (size_t) (messagePtr - Server.currentRequest.body));
+                username[strlen(username) - 1] = '\0';
 
-                snprintf(message, 256, "%.*s", 255, messagePtr + 1);
+                printf("Got message: %s\nGot username: %s\n", message, username);
 
                 int userIndex;
                 for (userIndex = 0; userIndex < Server.userCount; userIndex++) {
-                    if (strcmp(Server.users[userIndex].username, username) == 0) {
+                    bool equal = strcmp(Server.users[userIndex].username, username) == 0;
+                    printf("Usernames (%d) to compare: %s %s, result: %s\n", userIndex,
+                           Server.users[userIndex].username, username,
+                           equal ? "true" : "false");
+                    if (equal) {
                         break;
                     }
                 }
