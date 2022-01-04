@@ -71,14 +71,7 @@ In square brackets on diagrams contains the communication type id.
 
 On client request server answers with response of the same `R_Type`. Only when the user is not verified, server returns `R_NotVerified` and refuses answering to the client.
 
-```mermaid
-sequenceDiagram
-Client -->> Server: Request R_Type [type] 
-Note right of Server: If user is verified
-Server -->> Client: Response R_Type [request.responseType]
-Note right of Server: If user is not verified
-Server -->> Client: Response R_NotVerified [request.responseType]
-```
+<img src="https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5DbGllbnQgLS0-PiBTZXJ2ZXI6IFJlcXVlc3QgUl9UeXBlIFt0eXBlXSBcbk5vdGUgcmlnaHQgb2YgU2VydmVyOiBJZiB1c2VyIGlzIHZlcmlmaWVkXG5TZXJ2ZXIgLS0-PiBDbGllbnQ6IFJlc3BvbnNlIFJfVHlwZSBbcmVxdWVzdC5yZXNwb25zZVR5cGVdXG5Ob3RlIHJpZ2h0IG9mIFNlcnZlcjogSWYgdXNlciBpcyBub3QgdmVyaWZpZWRcblNlcnZlciAtLT4-IENsaWVudDogUmVzcG9uc2UgUl9Ob3RWZXJpZmllZCBbcmVxdWVzdC5yZXNwb25zZVR5cGVdIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0" />
 
 #### Channel & private messages
 
@@ -88,20 +81,11 @@ Communication type is incremented by 1 to distinct the communication from genera
 
 ##### Channel messages
 
-```mermaid
-sequenceDiagram
-Sender -->> Server: Request R_ChannelMessage [user.type]
-Server -->> Channel clients (also sender): Response R_ChannelMessage [client.responseType+1]
-```
+![Channel messages communication diagram](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5TZW5kZXIgLS0-PiBTZXJ2ZXI6IFJlcXVlc3QgUl9DaGFubmVsTWVzc2FnZSBbdXNlci50eXBlXVxuU2VydmVyIC0tPj4gQ2hhbm5lbCBjbGllbnRzIChhbHNvIHNlbmRlcik6IFJlc3BvbnNlIFJfQ2hhbm5lbE1lc3NhZ2UgW2NsaWVudC5yZXNwb25zZVR5cGUrMV0iLCJtZXJtYWlkIjoie1xuICBcInRoZW1lXCI6IFwiZGVmYXVsdFwiXG59IiwidXBkYXRlRWRpdG9yIjpmYWxzZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOmZhbHNlfQ "Channel messages communication diagram")
 
 ##### Private message
 
-```mermaid
-sequenceDiagram
-Sender -->> Server: Request R_PrivateMessage [user.type]
-Server -->> Receiver: Response R_PrivateMessage [client.responseType+1]
-Server -->> Sender: Response R_PrivateMessage [client.responseType+1]
-```
+![Private messages communication diagram](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5TZW5kZXIgLS0-PiBTZXJ2ZXI6IFJlcXVlc3QgUl9Qcml2YXRlTWVzc2FnZSBbdXNlci50eXBlXVxuU2VydmVyIC0tPj4gUmVjZWl2ZXI6IFJlc3BvbnNlIFJfUHJpdmF0ZU1lc3NhZ2UgW2NsaWVudC5yZXNwb25zZVR5cGUrMV1cblNlcnZlciAtLT4-IFNlbmRlcjogUmVzcG9uc2UgUl9Qcml2YXRlTWVzc2FnZSBbY2xpZW50LnJlc3BvbnNlVHlwZSsxXSIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9 "Private messages communication diagram")
 
 #### Heartbeat mechanism
 
@@ -109,13 +93,7 @@ Every 5 seconds (+- current response time) server sends `R_HeartBeat` request to
 
 Communication type is incremented by 2 to distinct the communication from general requests and messages.
 
-```mermaid
-sequenceDiagram
-Server -->> Client: Request R_HeartBeat [user.type+2]
-Client -->> Server: Response R_HeartBeat [user.responseType+2]
-Note left of Server: Got heartbeat response <br> Marking user as verified
-Note left of Server: Otherwise marking as not verified
-```
+![Heartbeat messages communication diagram](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5TZXJ2ZXIgLS0-PiBDbGllbnQ6IFJlcXVlc3QgUl9IZWFydEJlYXQgW3VzZXIudHlwZSsyXVxuQ2xpZW50IC0tPj4gU2VydmVyOiBSZXNwb25zZSBSX0hlYXJ0QmVhdCBbdXNlci5yZXNwb25zZVR5cGUrMl1cbk5vdGUgbGVmdCBvZiBTZXJ2ZXI6IEdvdCBoZWFydGJlYXQgcmVzcG9uc2UgPGJyPiBNYXJraW5nIHVzZXIgYXMgdmVyaWZpZWRcbk5vdGUgbGVmdCBvZiBTZXJ2ZXI6IE90aGVyd2lzZSBtYXJraW5nIGFzIG5vdCB2ZXJpZmllZCIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9 "Heartbeat messages communication diagram")
 
 ## Compilation
 
