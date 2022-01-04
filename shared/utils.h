@@ -1,6 +1,8 @@
 #ifndef PUT_PSIW_UTILS_H
 #define PUT_PSIW_UTILS_H
 
+#include "shared.h"
+
 void resetScreen();
 
 void resetLine();

@@ -4,7 +4,7 @@
 #define REQUEST_BODY_MAX_SIZE 2560
 #define MESSAGE_MAX_SIZE 255
 
-#include <stdbool.h>
+#include "shared.h"
 
 typedef enum {
     StatusG,
@@ -53,6 +53,6 @@ void sendResponse(int messageQueueId, long connectionId, const char *body, RType
 extern const char *RTypeString[];
 extern const char *StatusCodeString[];
 
-#include "shared.h"
+
 
 #endif
