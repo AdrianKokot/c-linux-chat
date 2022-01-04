@@ -6,8 +6,6 @@ Project created for "System and Concurrent Programming" course at Poznan Univers
 
 ## Protocol
 
-Communication protocol used to exchange data between client and server was based on HTTP.
-
 C structs used during communication:
 
 ```c
@@ -69,15 +67,15 @@ In square brackets on diagrams contains the communication type id.
 
 #### General requests
 
-On client request server answers with response of the same `R_Type`. Only when the user is not verified, server returns `R_NotVerified` and refuses answering to the client.
+On the client request, the server answers with a response of the same `R_Type`. Only when the user is not verified, the server returns `R_NotVerified` and refuse to answer the client.
 
 <img src="https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5DbGllbnQgLS0-PiBTZXJ2ZXI6IFJlcXVlc3QgUl9UeXBlIFt0eXBlXSBcbk5vdGUgcmlnaHQgb2YgU2VydmVyOiBJZiB1c2VyIGlzIHZlcmlmaWVkXG5TZXJ2ZXIgLS0-PiBDbGllbnQ6IFJlc3BvbnNlIFJfVHlwZSBbcmVxdWVzdC5yZXNwb25zZVR5cGVdXG5Ob3RlIHJpZ2h0IG9mIFNlcnZlcjogSWYgdXNlciBpcyBub3QgdmVyaWZpZWRcblNlcnZlciAtLT4-IENsaWVudDogUmVzcG9uc2UgUl9Ob3RWZXJpZmllZCBbcmVxdWVzdC5yZXNwb25zZVR5cGVdIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0" />
 
 #### Channel & private messages
 
-Client listens for all type of messages on different process, what makes whole message communication asynchronus.
+The client listens for channel and private messages on a different process. That makes whole message communication asynchronous.
 
-Communication type is incremented by 1 to distinct the communication from general requests and heartbeat.
+Communication type is incremented by 1 to avoid collision with the general and heartbeat requests.
 
 ##### Channel messages
 
@@ -89,7 +87,7 @@ Communication type is incremented by 1 to distinct the communication from genera
 
 #### Heartbeat mechanism
 
-Every 5 seconds (+- current response time) server sends `R_HeartBeat` request to the client. If the client sends response in 10ms, the user is marked as verified. Otherwise is marked as not verified and next request will be rejected with `R_NotVerified` response.
+Every 5 seconds (+- current response time) server sends `R_HeartBeat` request to the client. If the client sends a response in 10ms, the user is marked as verified. Otherwise is marked as not verified and the next request will be rejected with `R_NotVerified` response.
 
 Communication type is incremented by 2 to distinct the communication from general requests and messages.
 
@@ -104,17 +102,17 @@ gcc -Wall shared/* resources/server/* server.c -o server.out
 
 ## How to run
 
-Executable files have help, which can be runned by `./<executable-file> --help`.
+Executable files have help, which can be run by `./<executable-file> --help`.
 
 ### Server
 
-When you run server file, you'll be asked about ipc id to create queue.
+When you run the server file, you'll be asked about ipc id to create a queue.
 You can also provide the queue id by `-i <id>` or `--id <id>` parameter.
 
 ### Client
 
-When you run client file, you'll be asked about ipc id to connect to (it has to exist and has to be used by the server).
+When you run the client file, you'll be asked about ipc id to connect to (it has to exist and has to be used by the server).
 You can also provide that by `-s <id>` or `--server <id>` parameter.
 
-After getting correct server id, you'll be asked about username. It has to be unique.
+After getting a correct server id, you'll be asked about the username. It has to be unique.
 You can also provide that by `-u <username>` or `--username <username>`.
