@@ -16,8 +16,7 @@ typedef enum {
 } StatusCode;
 
 enum eRType {
-    R_Generic,
-    R_Init,
+    R_Init = 1,
     R_RegisterUser,
     R_UnregisterUser,
     R_ListChannel,
@@ -28,10 +27,12 @@ enum eRType {
     R_ListUsers,
     R_ChannelMessage,
     R_PrivateMessage,
-    R_HeatBeat
+    R_Heartbeat,
+    R_EndConnection
 };
 
 typedef enum eRType RType;
+
 
 typedef struct {
     long type;
@@ -47,12 +48,16 @@ typedef Request Response;
 
 const int REQUEST_SIZE;
 
-void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype, int channelId, bool debug);
-void sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status, int channelId, bool debug);
+void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype,
+                 int channelId, bool debug);
+
+void
+sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status, int channelId,
+             bool debug);
 
 extern const char *RTypeString[];
 extern const char *StatusCodeString[];
-
+extern const int InitialRTypeLimit;
 
 
 #endif

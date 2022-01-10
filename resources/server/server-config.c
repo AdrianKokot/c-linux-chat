@@ -13,6 +13,8 @@ struct serverConfig ServerConfig = {
         }
 };
 
+
+
 struct serverMessages Messages = {
         "Please enter queue id for the server to listen to (hex without '0x'): ",
         "Given queue is already taken.",
@@ -22,10 +24,10 @@ struct serverMessages Messages = {
         "Server is full.",
         "There's no available channels.\n",
         "\033[33mAvailable channels:\033[m\n",
-        "\033[33mThere's no users.\033[m\n",
         "\033[33mList of users:\033[m\n",
-        "Channel name should have at least 4 characters.",
-        "The message cannot be empty.",
+        "The channel name should be between 4 and " STR(MAX_CHANNEL_NAME) " characters long.",
+        "The message should be between 2 and " STR(MESSAGE_MAX_SIZE) " characters long.",
         "Couldn't send the message.",
-        "You can't send message to yourself."
+        "You can't send message to yourself.",
+        "The username should be between 4 and " STR(MAX_USERNAME) " characters."
 };

@@ -57,7 +57,7 @@ typedef enum {
  R_ListUsers,
  R_ChannelMessage,
  R_PrivateMessage,
- R_HeatBeat
+ R_Heartbeat
 } RType;
 ```
 
@@ -87,7 +87,7 @@ Communication type is incremented by 1 to avoid collision with the general and h
 
 #### Heartbeat mechanism
 
-Every 5 seconds (+- current response time) server sends `R_HeartBeat` request to the client. If the client sends a response in 10ms, the user is marked as verified. Otherwise is marked as not verified and the next request will be rejected with `R_NotVerified` response.
+Every 5 seconds (+- current response time) server sends `R_Heartbeat` request to the client. If the client sends a response in 10ms, the user is marked as verified. Otherwise is marked as not verified and the next request will be rejected with `R_NotVerified` response.
 
 Communication type is incremented by 2 to distinct the communication from general requests and messages.
 

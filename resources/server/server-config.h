@@ -7,6 +7,7 @@
 #define MAX_CHANNELS 10
 #define CHANNEL_HISTORY_SIZE 10
 #define SERVER_DEBUG true
+#define PRINT_HEARTBEAT false
 
 struct serverConfig {
     char *cliHelp[5];
@@ -23,12 +24,12 @@ struct serverMessages {
     const char *serverIsFull;
     const char *noAvailableChannels;
     const char *availableChannels;
-    const char *noUsers;
     const char *listOfUsers;
     const char *channelNameRequirement;
     const char *messageRequirement;
     const char *couldntSendMessage;
     const char *youCannotSendMessageToYourself;
+    const char *usernameRequirement;
 };
 
 struct serverMessages Messages;

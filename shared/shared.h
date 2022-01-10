@@ -2,7 +2,7 @@
 #define PUT_PSIW_SHARED_H
 
 #define DEBUG true
-#define RESET_SCREENS false
+#define RESET_SCREENS true
 #define MAX_CHANNEL_NAME 32
 #define MAX_USERNAME 32
 

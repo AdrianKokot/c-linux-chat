@@ -100,7 +100,7 @@ void startListeningForHeartbeat() {
 
             printfRDebug(&request, "HEARTBEAT REQUEST");
 
-            Response response = {request.responseType, "", StatusG, R_HeatBeat, 0, request.type, -1};
+            Response response = {request.responseType, "", StatusG, R_Heartbeat, 0, request.type, -1};
 
             msgsnd(Client.queueId, &response, REQUEST_SIZE, 0);
 

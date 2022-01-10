@@ -7,8 +7,6 @@ void resetScreen();
 
 void resetLine();
 
-void loadingScreen(double seconds);
-
 int msleep(unsigned int milliseconds);
 
 void printfDebug(const char *format, ...);

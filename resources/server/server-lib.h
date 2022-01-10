@@ -3,6 +3,8 @@
 
 #include "server-config.h"
 
+bool isServerFull();
+
 void printCliHelp();
 
 void terminateServer();
@@ -20,8 +22,6 @@ int addChannel(char *name);
 int joinChannel(char *channelName);
 
 void sendServerResponse(const char *body, StatusCode status);
-
-void sendServerInitResponse(const char *body, StatusCode status);
 
 void listenForRequest();
 

@@ -15,39 +15,46 @@ int main(int argc, char *argv[]) {
 
         listenForRequest();
 
+        bool isConnectionInitial = Server.currentRequest.rtype <= InitialRTypeLimit;
+
+        if (isConnectionInitial && isServerFull()) {
+            sendServerResponse(Messages.serverIsFull, StatusServerFull);
+            continue;
+        }
+
+        if (!isConnectionInitial && !isUserVerified()) {
+            sendServerResponse("", StatusNotVerified);
+            continue;
+        }
+
         switch (Server.currentRequest.rtype) {
+            case R_EndConnection:
+            case R_Heartbeat:
+                break;
+
             case R_Init: {
-                if (Server.userCount >= MAX_USERS) {
-                    sendServerInitResponse("", StatusServerFull);
-                    break;
-                }
 
                 sprintf(Server.currentResponseBody, "%d", Server.nextUserQueueId);
                 Server.nextUserQueueId += 3;
-                sendServerInitResponse(Server.currentResponseBody, StatusOK);
+                sendServerResponse(Server.currentResponseBody, StatusOK);
 
                 msleep(100);
-
                 break;
             }
             case R_RegisterUser: {
 
-                if (Server.userCount >= MAX_USERS) {
-                    sendServerResponse(Messages.serverIsFull, StatusServerFull);
+                if (Server.currentRequest.bodyLength <= 3 || Server.currentRequest.bodyLength + 1 >= MAX_USERNAME) {
+                    sendServerResponse(Messages.usernameRequirement, StatusValidationError);
                     break;
                 }
 
-                char *requestedUsername = malloc(sizeof(char) * Server.currentRequest.bodyLength);
-                snprintf(requestedUsername, Server.currentRequest.bodyLength + 1, "%s", Server.currentRequest.body);
-
-                if (isUsernameUnique(requestedUsername)) {
-                    addUser(requestedUsername, Server.currentRequest.type, Server.currentRequest.responseType);
-                    sendServerResponse("", StatusOK);
+                if (!isUsernameUnique(Server.currentRequest.body)) {
+                    sendServerResponse(Messages.nameTaken, StatusValidationError);
                     break;
                 }
 
-                sendServerResponse(Messages.nameTaken, StatusValidationError);
-
+                addUser(Server.currentRequest.body, Server.currentRequest.type, Server.currentRequest.responseType);
+                sendServerResponse("", StatusOK);
                 break;
             }
             case R_UnregisterUser: {
@@ -55,11 +62,6 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_ListChannel: {
-
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
 
                 char channelListBody[] = "";
 
@@ -80,15 +82,7 @@ int main(int argc, char *argv[]) {
             }
             case R_JoinChannel: {
 
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
-
-                char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
-                snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
-
-                int channelId = joinChannel(requestedName);
+                int channelId = joinChannel(Server.currentRequest.body);
 
                 if (channelId == -1) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
@@ -102,58 +96,42 @@ int main(int argc, char *argv[]) {
             }
             case R_CreateChannel: {
 
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
-
                 if (Server.channelCount >= MAX_CHANNELS) {
                     sendServerResponse(Messages.serverIsFull, StatusServerFull);
                     break;
                 }
 
-                if (Server.currentRequest.bodyLength <= 3) {
+                if (Server.currentRequest.bodyLength <= 3 || Server.currentRequest.bodyLength + 1 >= MAX_CHANNEL_NAME) {
                     sendServerResponse(Messages.channelNameRequirement, StatusValidationError);
                     break;
                 }
 
-                char *requestedName = malloc(sizeof(char) * MAX_CHANNEL_NAME);
-                snprintf(requestedName, MAX_CHANNEL_NAME + 1, "%.*s", MAX_CHANNEL_NAME, Server.currentRequest.body);
-
-                if (isChannelNameUnique(requestedName)) {
-                    addChannel(requestedName);
-                    sendServerResponse("", StatusOK);
+                if (!isChannelNameUnique(Server.currentRequest.body)) {
+                    sendServerResponse(Messages.nameTaken, StatusValidationError);
                     break;
                 }
 
-                sendServerResponse(Messages.nameTaken, StatusValidationError);
+                addChannel(Server.currentRequest.body);
+                sendServerResponse("", StatusOK);
                 break;
             }
             case R_ChannelMessage: {
-
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
 
                 if (!doesChannelExistById(Server.currentRequest.channelId)) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
                     break;
                 }
 
-                char *message = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-                snprintf(message, MESSAGE_MAX_SIZE + 1, "%.*s", MESSAGE_MAX_SIZE, Server.currentRequest.body);
+                if (Server.currentRequest.bodyLength <= 1 || Server.currentRequest.bodyLength + 1 >= MESSAGE_MAX_SIZE) {
+                    sendServerResponse(Messages.messageRequirement, StatusValidationError);
+                    break;
+                }
 
-                sendChannelMessage(message, Server.currentRequest.channelId, true);
+                sendChannelMessage(Server.currentRequest.body, Server.currentRequest.channelId, true);
                 sendServerResponse("", StatusOK);
                 break;
             }
             case R_LeaveChannel: {
-
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
 
                 if (!leaveChannel(Server.currentRequest.type)) {
                     sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
@@ -164,11 +142,6 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_ListUsers: {
-
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
 
                 char listBody[] = "";
 
@@ -183,11 +156,6 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case R_ListUsersOnChannel: {
-
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
 
                 int channelIdToCheck = -1;
                 if (Server.currentRequest.bodyLength > 0) {
@@ -222,32 +190,23 @@ int main(int argc, char *argv[]) {
             }
             case R_PrivateMessage: {
 
-                if (!isUserVerified()) {
-                    sendServerResponse("", StatusNotVerified);
-                    break;
-                }
-
                 char *username = malloc(sizeof(char) * MAX_USERNAME);
                 char *message = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
 
-                for (int i = 0; i < Server.currentRequest.bodyLength; i++) {
-                    if (Server.currentRequest.body[i] == ' ') {
-                        strncpy(username, Server.currentRequest.body, i+1 > MAX_USERNAME ? MAX_USERNAME : i+1);
-                        strncpy(message, Server.currentRequest.body + i + 1, MESSAGE_MAX_SIZE);
-                        break;
-                    }
+                sscanf(Server.currentRequest.body, "%" STR(MAX_USERNAME) "s %" STR(MESSAGE_MAX_SIZE) "s", username,
+                       message);
+
+                if (strlen(message) <= 1 || strlen(message) + 1 >= MESSAGE_MAX_SIZE) {
+                    sendServerResponse(Messages.messageRequirement, StatusValidationError);
+                    break;
                 }
-
-                username[strlen(username) - 1] = '\0';
-
-                printf("Got message: %s\nGot username: %s\n", message, username);
 
                 int userIndex;
                 for (userIndex = 0; userIndex < Server.userCount; userIndex++) {
                     bool equal = strcmp(Server.users[userIndex].username, username) == 0;
-                    printf("Usernames (%d) to compare: %s %s, result: %s\n", userIndex,
-                           Server.users[userIndex].username, username,
-                           equal ? "true" : "false");
+                    printfDebug("Usernames (%d) to compare: %s %s, result: %s\n", userIndex,
+                                Server.users[userIndex].username, username,
+                                equal ? "true" : "false");
                     if (equal) {
                         break;
                     }
@@ -277,6 +236,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
+
         }
 
         verifyUsers();

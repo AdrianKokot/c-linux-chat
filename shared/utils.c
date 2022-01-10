@@ -79,17 +79,3 @@ void resetLine() {
     if (RESET_SCREENS)
         printf("\033[A\33[2K\r");
 }
-
-void loadingScreen(double seconds) {
-    int iterations = (int) (seconds * 1000) / 200;
-
-    for (int i = 0; i < iterations; i++) {
-        resetLine();
-        printf("Loading");
-        for (int j = 0; j < i % 3; j++) {
-            printf(".");
-        }
-        printf("\n");
-        msleep(200);
-    }
-}

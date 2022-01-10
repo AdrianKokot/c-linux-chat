@@ -1,7 +1,6 @@
 #include "communication-structs.h"
 
 const char *RTypeString[] = {
-        [R_Generic] = "R_Generic",
         [R_Init] = "R_Init",
         [R_RegisterUser] = "R_RegisterUser",
         [R_UnregisterUser] = "R_UnregisterUser",
@@ -13,7 +12,8 @@ const char *RTypeString[] = {
         [R_ListUsers] = "R_ListUsers",
         [R_ChannelMessage] = "R_ChannelMessage",
         [R_PrivateMessage] = "R_PrivateMessage",
-        [R_HeatBeat] = "R_HeatBeat"
+        [R_Heartbeat] = "R_Heartbeat",
+        [R_EndConnection] = "R_EndConnection"
 };
 
 const char *StatusCodeString[] = {
@@ -65,3 +65,5 @@ sendResponse(int messageQueueId, long connectionId, const char *body, RType rtyp
 const int REQUEST_SIZE =
         sizeof(char) * REQUEST_BODY_MAX_SIZE + sizeof(StatusCode) + sizeof(RType) + sizeof(unsigned long) +
         sizeof(long) + sizeof(int);
+
+const int InitialRTypeLimit = R_RegisterUser;

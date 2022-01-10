@@ -1,30 +1,36 @@
 #include "server-lib.h"
 
+bool isServerFull() {
+    return Server.userCount >= MAX_USERS;
+}
+
 bool verifyUser(long userConnectionId, long userResponseConnectionId) {
-    sendRequest(Server.queueId, userConnectionId + 2, userResponseConnectionId + 2, "", R_HeatBeat, -1, false);
+    sendRequest(Server.queueId, userConnectionId + 2, userResponseConnectionId + 2, "", R_Heartbeat, -1, false);
 
     msleep(10);
     Response response;
     int size = msgrcv(Server.queueId, &response, REQUEST_SIZE, userResponseConnectionId + 2, IPC_NOWAIT);
 
-    if (size != -1) {
 
-//        printfDebug(
-//                "[HEARTBEAT]\n\tBody: %s\n\tBody length: %lu\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %ld\n\tResponseConnectionId: %ld\n\tChannelId: %d\n\n",
-//                response.body,
-//                response.bodyLength,
-//                RTypeString[response.rtype],
-//                StatusCodeString[response.status],
-//                Server.queueId,
-//                response.type,
-//                response.responseType,
-//                response.channelId
-//        );
-        return true;
-    } else {
-//        printfDebug("[HEARTBEAT] MISSED!\n");
-        return false;
+    if (PRINT_HEARTBEAT) {
+        if (size != -1) {
+            printfDebug(
+                    "[HEARTBEAT]\n\tBody: %s\n\tBody length: %lu\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %ld\n\tResponseConnectionId: %ld\n\tChannelId: %d\n\n",
+                    response.body,
+                    response.bodyLength,
+                    RTypeString[response.rtype],
+                    StatusCodeString[response.status],
+                    Server.queueId,
+                    response.type,
+                    response.responseType,
+                    response.channelId
+            );
+        } else {
+            printfDebug("[HEARTBEAT] MISSED!\n");
+        }
     }
+
+    return size != -1;
 
 }
 
@@ -41,13 +47,12 @@ void unregisterUser(int userIndex) {
 }
 
 void unregisterUserById(long userId) {
-    for(int i = 0; i < Server.userCount; i++) {
-        if(Server.users[i].id == userId) {
+    for (int i = 0; i < Server.userCount; i++) {
+        if (Server.users[i].id == userId) {
             return unregisterUser(i);
         }
     }
 }
-
 
 void verifyUsers() {
     for (int i = 0; i < Server.userCount; i++) {
@@ -66,7 +71,7 @@ void verifyUsers() {
 
 void terminateServer() {
     for (int i = 0; i < Server.userCount; i++) {
-        sendResponse(Server.queueId, Server.users[i].id, "", R_Generic, StatusNotVerified,
+        sendResponse(Server.queueId, Server.users[i].id, "", R_EndConnection, StatusNotVerified,
                      -1, SERVER_DEBUG);
     }
     msgctl(Server.queueId, IPC_RMID, NULL);
@@ -87,20 +92,14 @@ void init(int argc, char *argv[]) {
     key_t key = 0x1234;
 
     struct appArguments {
-        bool help;
         bool queue;
-    } arguments = {false, false};
+    } arguments = {false};
 
     for (int i = 1; i < argc; i++) {
-        if (!arguments.help && checkVSignature(argv[i], CliCommands.help)) {
-            arguments.help = true;
-
-            arguments.help = true;
+        if (checkVSignature(argv[i], CliCommands.help)) {
 
             printCliHelp();
-            terminateServer();
-
-            return;
+            return terminateServer();
 
         } else if (!arguments.queue && checkVSignature(argv[i], CliCommands.queue)) {
             i++;
@@ -109,7 +108,6 @@ void init(int argc, char *argv[]) {
                 sscanf(argv[i], "%x", &key);
                 arguments.queue = true;
             }
-
         }
     }
 
@@ -134,8 +132,10 @@ void init(int argc, char *argv[]) {
     }
 
     Server.currentResponseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
-    Server.nextUserQueueId = 1000 + (Server.queueId * 100);
+    Server.nextUserQueueId = (Server.queueId * 100) * MAX_USERS * 3;
     Server.queueTypeGap = (Server.nextUserQueueId * 2 - 1) * -1;
+
+    printf("Next userQueueId: %d\n QueueTypeGap:%d\n", Server.nextUserQueueId, Server.queueTypeGap);
 }
 
 bool isUsernameUnique(char *username) {
@@ -201,7 +201,8 @@ int joinChannel(char *channelName) {
     }
 
     char *channelMessage = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has joined the channel!", getTimeString(),
+    snprintf(channelMessage, MESSAGE_MAX_SIZE,
+             "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has joined the channel!", getTimeString(),
              Server.channels[channelIndex].name, Server.users[userIndex].username);
 
     sendChannelMessage(channelMessage, channelId, false);
@@ -215,10 +216,6 @@ int joinChannel(char *channelName) {
 void sendServerResponse(const char *body, StatusCode status) {
     sendResponse(Server.queueId, Server.currentRequest.responseType, body, Server.currentRequest.rtype, status,
                  Server.currentRequest.channelId, SERVER_DEBUG);
-}
-
-void sendServerInitResponse(const char *body, StatusCode status) {
-    sendResponse(Server.queueId, R_Init, body, R_Init, status, Server.currentRequest.channelId, SERVER_DEBUG);
 }
 
 void listenForRequest() {
@@ -264,7 +261,8 @@ void sendChannelMessage(const char *message, int id, bool format) {
     char *messageForUser = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
 
     if (format) {
-        snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[34m%s\033[m] [\033[32m%s\033[m]: %s", getTimeString(),
+        snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[34m%s\033[m] [\033[32m%s\033[m]: %s",
+                 getTimeString(),
                  Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
     } else {
         snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "%s", message);
@@ -310,7 +308,8 @@ bool sendPrivateMessage(long senderId, long receiverId, const char *message) {
     }
 
     char *messageForUser = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[32m%s\033[m -> \033[32m%s\033[m]: %s", getTimeString(),
+    snprintf(messageForUser, MESSAGE_MAX_SIZE + 1, "[\033[35m%s\033[m] [\033[32m%s\033[m -> \033[32m%s\033[m]: %s",
+             getTimeString(),
              Server.users[senderIndex].username, Server.users[receiverIndex].username, message);
 
     sendResponse(Server.queueId, Server.users[receiverIndex].connectionResponseId + 1, messageForUser, R_PrivateMessage,
@@ -342,7 +341,6 @@ bool sendChannelHistory(long userId, int channelId) {
 
     char *historyMessage = malloc(sizeof(char) * REQUEST_BODY_MAX_SIZE);
     memset(historyMessage, 0, REQUEST_BODY_MAX_SIZE);
-
 
 
     for (int i = Server.channels[channelIndex].historyLength - 1; i >= 0; i--) {
@@ -389,7 +387,8 @@ bool leaveChannel(long userId) {
     Server.users[userIndex].channelId = -1;
 
     char *channelMessage = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
-    snprintf(channelMessage, MESSAGE_MAX_SIZE, "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has left the channel!", getTimeString(),
+    snprintf(channelMessage, MESSAGE_MAX_SIZE,
+             "[\033[35m%s\033[m] [\033[34m%s\033[m] User \033[32m%s\033[m has left the channel!", getTimeString(),
              Server.channels[channelIndex].name, Server.users[userIndex].username);
 
     sendChannelMessage(channelMessage, channelId, false);
