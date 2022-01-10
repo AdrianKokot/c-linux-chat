@@ -2,9 +2,12 @@
 #define PUT_PSIW_SHARED_H
 
 #define DEBUG true
-#define RESET_SCREENS true
+#define RESET_SCREENS false
 #define MAX_CHANNEL_NAME 32
 #define MAX_USERNAME 32
+
+#define STR2(x) #x
+#define STR(X) STR2(X)
 
 #include <limits.h>
 #include <stdbool.h>

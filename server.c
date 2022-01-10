@@ -16,9 +16,6 @@ int main(int argc, char *argv[]) {
         listenForRequest();
 
         switch (Server.currentRequest.rtype) {
-            default: {
-                break;
-            }
             case R_Init: {
                 if (Server.userCount >= MAX_USERS) {
                     sendServerInitResponse("", StatusServerFull);
@@ -284,9 +281,6 @@ int main(int argc, char *argv[]) {
 
         verifyUsers();
     }
-
-    terminateServer();
-    return 0;
 }
 
 #pragma clang diagnostic pop

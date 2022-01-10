@@ -332,7 +332,7 @@ int executeCommand(char command[255]) {
         return false;
     }
 
-    printf("\033[31m%s\033[m %s","Unknown command.", Messages.helpInstruction);
+    printf("\033[31m%s\033[m %s", "Unknown command.", Messages.helpInstruction);
 
     return false;
 }
@@ -361,7 +361,7 @@ void init(int argc, char *argv[]) {
             i++;
 
             if (i < argc) {
-                snprintf(Client.username, 255, "%s", argv[i]);
+                strncpy(Client.username, argv[i], MAX_USERNAME);
                 arguments.username = true;
             }
 
@@ -404,13 +404,13 @@ void init(int argc, char *argv[]) {
 
     if (!arguments.username) {
         printf("\033[31m%s\033[m", Messages.askUsername);
-        scanf("%255[^\n]s", Client.username);
+        scanf("%32s", Client.username);
         clearStdin();
     }
 
     while (!isUsernameUnique()) {
         printf("\033[31m%s\033[m", Messages.chooseDifferentUsername);
-        scanf("%255[^\n]s", Client.username);
+        scanf("%32s", Client.username);
         clearStdin();
     }
 
