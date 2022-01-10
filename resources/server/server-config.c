@@ -13,8 +13,6 @@ struct serverConfig ServerConfig = {
         }
 };
 
-
-
 struct serverMessages Messages = {
         "Please enter queue id for the server to listen to (hex without '0x'): ",
         "Given queue is already taken.",

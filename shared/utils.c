@@ -67,7 +67,11 @@ int printHelp(char *title, char *commands[]) {
 }
 
 bool checkVSignature(const char *toCheck, const char *sig[2]) {
-    return (strncmp(toCheck, sig[0], strlen(sig[0])) == 0 || strncmp(toCheck, sig[1], strlen(sig[1])) == 0);
+    char *toCheckWithoutSpaces = malloc(sizeof(char) * strlen(toCheck));
+
+    sscanf(toCheck, "%s", toCheckWithoutSpaces);
+
+    return (strcmp(toCheckWithoutSpaces, sig[0]) == 0 || strcmp(toCheckWithoutSpaces, sig[1]) == 0);
 }
 
 void resetScreen() {

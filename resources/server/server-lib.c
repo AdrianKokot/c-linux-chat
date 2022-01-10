@@ -132,10 +132,8 @@ void init(int argc, char *argv[]) {
     }
 
     Server.currentResponseBody = malloc(REQUEST_BODY_MAX_SIZE * sizeof(char));
-    Server.nextUserQueueId = (Server.queueId * 100) * MAX_USERS * 3;
+    Server.nextUserQueueId = 1024 * MAX_USERS * 3;
     Server.queueTypeGap = (Server.nextUserQueueId * 2 - 1) * -1;
-
-    printf("Next userQueueId: %d\n QueueTypeGap:%d\n", Server.nextUserQueueId, Server.queueTypeGap);
 }
 
 bool isUsernameUnique(char *username) {
