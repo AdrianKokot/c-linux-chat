@@ -15,10 +15,6 @@ void loggedOut() {
     terminateClient();
 }
 
-void sendInitRequest(int queueId) {
-    sendRequest(queueId, R_Init, R_Init, "", R_Init, Client.channelId, CLIENT_DEBUG);
-}
-
 bool doesServerExist() {
     int id = msgget(Client.serverId, IPC_EXCL);
     return id == -1 && ENOENT == errno ? false : true;
@@ -32,10 +28,10 @@ bool canJoinServer() {
         return false;
     }
 
-    sendInitRequest(id);
+    sendRequest(id, R_Init, R_Init, "", R_Init, Client.channelId, CLIENT_DEBUG);
 
     Response response;
-    msgrcv(id, &response, REQUEST_SIZE, R_Init, 0);
+    msgrcv(id, &response, RESPONSE_SIZE, R_Init, 0);
 
     if (response.status != StatusOK) {
         return false;
@@ -48,19 +44,8 @@ bool canJoinServer() {
     return true;
 }
 
-void printfRDebug(Request *r, const char *title) {
-    if (CLIENT_DEBUG) {
-        printfDebug(
-                "[%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                title, r->body, r->bodyLength, RTypeString[r->rtype], StatusCodeString[r->status], r->type,
-                r->responseType, r->channelId);
-    }
-}
-
 int getResponse(Response *response) {
-    int size = (int) msgrcv(Client.queueId, response, REQUEST_SIZE, Client.responseConnectionId, 0);
-
-    printfRDebug(response, "RESPONSE");
+    int size = (int) msgrcv(Client.queueId, response, RESPONSE_SIZE, Client.responseConnectionId, 0);
 
     if (response->status == StatusNotVerified) {
         loggedOut();
@@ -69,10 +54,18 @@ int getResponse(Response *response) {
     return size;
 }
 
+int getResponseFromId(Response *response, long connectionId) {
+    int size = (int) msgrcv(Client.queueId, response, RESPONSE_SIZE, connectionId, 0);
+
+    return size;
+}
+
 void sendClientRequest(const char *body, RType rtype) {
     if (!doesServerExist()) {
         loggedOut();
     }
+
+    printf("SendClientRequest channelID: %d\n", Client.channelId);
 
     sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype, Client.channelId,
                 CLIENT_DEBUG);
@@ -98,13 +91,7 @@ void startListeningForHeartbeat() {
             Request request;
             msgrcv(Client.queueId, &request, REQUEST_SIZE, connectionId, 0);
 
-            printfRDebug(&request, "HEARTBEAT REQUEST");
-
-            Response response = {request.responseType, "", StatusG, R_Heartbeat, 0, request.type, -1};
-
-            msgsnd(Client.queueId, &response, REQUEST_SIZE, 0);
-
-            printfRDebug(&response, "HEARTBEAT RESPONSE");
+            sendResponse(Client.queueId, request.responseConnectionId, "", R_Heartbeat, StatusOK, CLIENT_DEBUG);
         }
 
         loggedOut();
@@ -119,7 +106,8 @@ void startListeningForMessages() {
             }
 
             Response response;
-            msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId + 1, 0);
+            getResponseFromId(&response, Client.responseConnectionId + 1);
+
             msleep(10);
             printf("%s\n", response.body);
         }
@@ -137,15 +125,14 @@ bool isUsernameUnique() {
     return response.status == StatusOK;
 }
 
-void sendMessageToChannel(char message[255]) {
+void sendMessageToChannel(char message[MAX_MESSAGE_SIZE]) {
     sendClientRequest(message, R_ChannelMessage);
-    Response response;
-    msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId, 0);
 
-    printfRDebug(&response, "RESPONSE");
+    Response response;
+    getResponse(&response);
 
     if (response.status != StatusOK) {
-        printf("Couldn't send a message.\n");
+        printf("%s\n", response.body);
     }
 }
 
@@ -180,7 +167,6 @@ char *getListOfUsersOnChannel(const char *channelName) {
         sendClientRequest("", R_ListUsersOnChannel);
     } else {
         sendClientRequest(channelName, R_ListUsersOnChannel);
-
     }
 
     Response response;
@@ -209,12 +195,12 @@ int executeCommand(char command[255]) {
         sendClientRequest(userAndMessage, R_PrivateMessage);
 
         Response response;
-        msgrcv(Client.queueId, &response, REQUEST_SIZE, Client.responseConnectionId, 0);
+        getResponse(&response);
 
         if (response.status == StatusNotVerified) {
             loggedOut();
         } else if (response.status != StatusOK) {
-            printf("\033[31m%s\033[m\n", response.body);
+            printf("%s\n", response.body);
         }
 
         return false;
@@ -224,7 +210,7 @@ int executeCommand(char command[255]) {
     if (checkVSignature(command, AppCommands.exit)) {
         sendClientRequest("", R_UnregisterUser);
         resetScreen();
-        printf("Exiting..\n");
+        printf("Bye!");
         return true;
     }
 
@@ -253,13 +239,7 @@ int executeCommand(char command[255]) {
         Response response;
         getResponse(&response);
 
-        if (response.status == StatusServerFull) {
-            printf("\033[31m%s\033[m\n", Messages.serverChannelsFull);
-        } else if (response.status == StatusValidationError) {
-            printf("\033[31m%s\033[m\n", response.body);
-        } else {
-            printf("\033[33m%s\033[m '\033[34m%s\033[m'\033[33m .\033[m\n", Messages.channelCreated, channelName);
-        }
+        printf("%s\n", response.body);
 
         return false;
     }
@@ -279,11 +259,10 @@ int executeCommand(char command[255]) {
         Response response;
         getResponse(&response);
 
-        if (response.status == StatusValidationError) {
-            printf("\033[31m%s\033[m\n", Messages.channelDoesntExist);
-        } else {
+        if (response.status == StatusOK) {
             Client.channelId = (int) strtol(response.body, NULL, 10);
-            Client.channelName = channelName;
+        } else {
+            printf("%s\n", response.body);
         }
 
         return false;
@@ -296,12 +275,11 @@ int executeCommand(char command[255]) {
         Response response;
         getResponse(&response);
 
-        if (response.status == StatusValidationError) {
-            printf("\033[31m%s\033[m\n", Messages.notConnected);
-        } else {
+        if (response.status == StatusOK) {
             Client.channelId = -1;
-            printf("\033[33m%s\033[m\n", "Successfully left channel.");
         }
+
+        printf("%s\n", response.body);
 
         return false;
     }

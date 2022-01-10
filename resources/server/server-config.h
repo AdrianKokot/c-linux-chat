@@ -30,6 +30,16 @@ struct serverMessages {
     const char *couldntSendMessage;
     const char *youCannotSendMessageToYourself;
     const char *usernameRequirement;
+    const char *helpInstruction;
+    const char *serverIdRequirement;
+    const char *serverDoesntExist;
+    const char *serverFull;
+    const char *askUsername;
+    const char *chooseDifferentUsername;
+    const char *notConnected;
+    const char *serverChannelsFull;
+    const char *channelCreated;
+    const char *leftChannel;
 };
 
 struct serverMessages Messages;
@@ -51,7 +61,7 @@ struct {
         int id;
         char name[MAX_CHANNEL_NAME];
         int userCount;
-        char history[CHANNEL_HISTORY_SIZE][MESSAGE_MAX_SIZE];
+        char history[CHANNEL_HISTORY_SIZE][MAX_MESSAGE_SIZE];
         int historyLength;
     } channels[MAX_CHANNELS];
 

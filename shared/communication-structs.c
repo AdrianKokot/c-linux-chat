@@ -25,45 +25,40 @@ const char *StatusCodeString[] = {
         [StatusNotVerified] = "StatusNotVerified"
 };
 
-void
-communicate(int messageQueueId, long type, long responseType, const char *body, RType rtype, StatusCode status,
-            int channelId,
-            const char *debugMessage, bool debug) {
-    Request request = {type, "", status, rtype, 0, responseType};
-    request.channelId = channelId;
+void sendRequest(int queueId, long connectionId, long responseConnectionId, const char *body, RType type, int channelId,
+                 bool printDebug) {
+    Request r = {connectionId, "", 0, type, responseConnectionId, channelId};
 
-    snprintf(request.body, REQUEST_BODY_MAX_SIZE, "%s", body);
-    request.bodyLength = strlen(request.body);
+    snprintf(r.body, REQUEST_BODY_MAX_SIZE, "%s", body);
+    r.bodyLength = strlen(r.body);
 
-    msgsnd(messageQueueId, &request, REQUEST_SIZE, 0);
+    msgsnd(queueId, &r, REQUEST_SIZE, 0);
 
-    if (debug) {
+    if (printDebug) {
         printfDebug(
-                "SEND [%s]\n\tBody: %s\n\tBody length: %d\n\tRType: %s\n\tStatus: %s\n\tQueueId: %d\n\tRequestConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
-                debugMessage,
-                request.body, request.bodyLength,
-                RTypeString[request.rtype],
-                StatusCodeString[request.status],
-                messageQueueId, request.type, request.responseType, request.channelId);
+                "SEND [REQUEST]\n\tBody: %s\n\tBody length: %d\n\tType: %s\n\tQueueId: %d\n\tConnectionId: %d\n\tResponseConnectionId: %d\n\tChannelId: %d\n\n",
+                r.body, r.bodyLength, RTypeString[r.type], queueId, r.connectionId,
+                r.responseConnectionId, r.channelId);
     }
-
 }
 
-void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype,
-                 int channelId, bool debug) {
-    communicate(messageQueueId, connectionId, responseConnectionId, body, rtype, StatusOK, channelId, "REQUEST",
-                debug);
+void sendResponse(int queueId, long connectionId, const char *body, RType type, StatusCode status, bool printDebug) {
+    Response r = {connectionId, "", 0, type, status};
+
+    snprintf(r.body, REQUEST_BODY_MAX_SIZE, "%s", body);
+    r.bodyLength = strlen(r.body);
+
+    msgsnd(queueId, &r, RESPONSE_SIZE, 0);
+
+    if (printDebug) {
+        printfDebug(
+                "SEND [RESPONSE]\n\tBody: %s\n\tBody length: %d\n\tType: %s\n\tQueueId: %d\n\tConnectionId: %d\n\tStatus: %s\n\n",
+                r.body, r.bodyLength, RTypeString[r.type], queueId, r.connectionId, StatusCodeString[r.status]);
+    }
 }
 
-void
-sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status, int channelId,
-             bool debug) {
-    communicate(messageQueueId, connectionId, connectionId / 2, body, rtype, status, channelId, "RESPONSE",
-                debug);
-}
+const int REQUEST_SIZE = sizeof(Request) - sizeof(long);
 
-const int REQUEST_SIZE =
-        sizeof(char) * REQUEST_BODY_MAX_SIZE + sizeof(StatusCode) + sizeof(RType) + sizeof(unsigned long) +
-        sizeof(long) + sizeof(int);
+const int RESPONSE_SIZE = sizeof(Response) - sizeof(long);
 
 const int InitialRTypeLimit = R_RegisterUser;

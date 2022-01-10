@@ -10,12 +10,12 @@ C structs used during communication:
 
 ```c
 typedef  struct {
- long type;
+ long connectionId;
  char body[REQUEST_BODY_MAX_SIZE];
  unsigned long bodyLength;
  StatusCode status;
- RType rtype;
- long responseType;
+ RType connectionId;
+ long responseConnectionId;
  int channelId;
 } Request;
 
@@ -24,12 +24,12 @@ typedef Request Response;
 
 Purpose of struct's properties:
 
-* **type** - communication type also treated as userId
+* **connectionId** - communication connectionId also treated as connectionId
 * **body** - communicate body
 * **bodyLength** - length of communicate body (string length)
 * **status** - response status
-* **rtype** - response/request type defining what server is asked for (request) or what contains the response
-* **responseType** - communication type used to send response
+* **connectionId** - response/request connectionId defining what server is asked for (request) or what contains the response
+* **responseConnectionId** - communication connectionId used to send response
 * **channelId** - id of the channel that user is connected to
 
 StatusCode and RType are enums defined as follows:
@@ -63,7 +63,7 @@ typedef enum {
 
 ### Communication diagram
 
-In square brackets on diagrams contains the communication type id.
+In square brackets on diagrams contains the communication connectionId id.
 
 #### General requests
 
@@ -75,7 +75,7 @@ On the client request, the server answers with a response of the same `R_Type`. 
 
 The client listens for channel and private messages on a different process. That makes whole message communication asynchronous.
 
-Communication type is incremented by 1 to avoid collision with the general and heartbeat requests.
+Communication connectionId is incremented by 1 to avoid collision with the general and heartbeat requests.
 
 ##### Channel messages
 
@@ -89,7 +89,7 @@ Communication type is incremented by 1 to avoid collision with the general and h
 
 Every 5 seconds (+- current response time) server sends `R_Heartbeat` request to the client. If the client sends a response in 10ms, the user is marked as verified. Otherwise is marked as not verified and the next request will be rejected with `R_NotVerified` response.
 
-Communication type is incremented by 2 to distinct the communication from general requests and messages.
+Communication connectionId is incremented by 2 to distinct the communication from general requests and messages.
 
 ![Heartbeat messages communication diagram](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5TZXJ2ZXIgLS0-PiBDbGllbnQ6IFJlcXVlc3QgUl9IZWFydEJlYXQgW3VzZXIudHlwZSsyXVxuQ2xpZW50IC0tPj4gU2VydmVyOiBSZXNwb25zZSBSX0hlYXJ0QmVhdCBbdXNlci5yZXNwb25zZVR5cGUrMl1cbk5vdGUgbGVmdCBvZiBTZXJ2ZXI6IEdvdCBoZWFydGJlYXQgcmVzcG9uc2UgPGJyPiBNYXJraW5nIHVzZXIgYXMgdmVyaWZpZWRcbk5vdGUgbGVmdCBvZiBTZXJ2ZXI6IE90aGVyd2lzZSBtYXJraW5nIGFzIG5vdCB2ZXJpZmllZCIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9 "Heartbeat messages communication diagram")
 

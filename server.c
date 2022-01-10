@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
         listenForRequest();
 
-        bool isConnectionInitial = Server.currentRequest.rtype <= InitialRTypeLimit;
+        bool isConnectionInitial = Server.currentRequest.type <= InitialRTypeLimit;
 
         if (isConnectionInitial && isServerFull()) {
             sendServerResponse(Messages.serverIsFull, StatusServerFull);
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        switch (Server.currentRequest.rtype) {
+        switch (Server.currentRequest.type) {
             case R_EndConnection:
             case R_Heartbeat:
                 break;
@@ -53,12 +53,12 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                addUser(Server.currentRequest.body, Server.currentRequest.type, Server.currentRequest.responseType);
+                addUser(Server.currentRequest.body, Server.currentRequest.connectionId, Server.currentRequest.responseConnectionId);
                 sendServerResponse("", StatusOK);
                 break;
             }
             case R_UnregisterUser: {
-                unregisterUserById(Server.currentRequest.type);
+                unregisterUserById(Server.currentRequest.connectionId);
                 break;
             }
             case R_ListChannel: {
@@ -91,13 +91,13 @@ int main(int argc, char *argv[]) {
 
                 sprintf(Server.currentResponseBody, "%d", channelId);
                 sendServerResponse(Server.currentResponseBody, StatusOK);
-                sendChannelHistory(Server.currentRequest.type, channelId);
+                sendChannelHistory(Server.currentRequest.connectionId, channelId);
                 break;
             }
             case R_CreateChannel: {
 
                 if (Server.channelCount >= MAX_CHANNELS) {
-                    sendServerResponse(Messages.serverIsFull, StatusServerFull);
+                    sendServerResponse(Messages.serverChannelsFull, StatusServerFull);
                     break;
                 }
 
@@ -112,7 +112,11 @@ int main(int argc, char *argv[]) {
                 }
 
                 addChannel(Server.currentRequest.body);
-                sendServerResponse("", StatusOK);
+
+                sprintf(Server.currentResponseBody, "\033[33m%s\033[m '\033[34m%s\033[m'\033[33m.\033[m",
+                        Messages.channelCreated, Server.currentRequest.body);
+
+                sendServerResponse(Server.currentResponseBody, StatusOK);
                 break;
             }
             case R_ChannelMessage: {
@@ -122,7 +126,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                if (Server.currentRequest.bodyLength <= 1 || Server.currentRequest.bodyLength + 1 >= MESSAGE_MAX_SIZE) {
+                if (Server.currentRequest.bodyLength <= 1 || Server.currentRequest.bodyLength + 1 >= MAX_MESSAGE_SIZE) {
                     sendServerResponse(Messages.messageRequirement, StatusValidationError);
                     break;
                 }
@@ -133,12 +137,12 @@ int main(int argc, char *argv[]) {
             }
             case R_LeaveChannel: {
 
-                if (!leaveChannel(Server.currentRequest.type)) {
-                    sendServerResponse(Messages.channelDoesntExist, StatusValidationError);
+                if (!leaveChannel(Server.currentRequest.connectionId)) {
+                    sendServerResponse(Messages.notConnected, StatusValidationError);
                     break;
                 }
 
-                sendServerResponse("", StatusOK);
+                sendServerResponse(Messages.leftChannel, StatusOK);
                 break;
             }
             case R_ListUsers: {
@@ -191,12 +195,12 @@ int main(int argc, char *argv[]) {
             case R_PrivateMessage: {
 
                 char *username = malloc(sizeof(char) * MAX_USERNAME);
-                char *message = malloc(sizeof(char) * MESSAGE_MAX_SIZE);
+                char *message = malloc(sizeof(char) * MAX_MESSAGE_SIZE);
 
-                sscanf(Server.currentRequest.body, "%" STR(MAX_USERNAME) "s %" STR(MESSAGE_MAX_SIZE) "s", username,
+                sscanf(Server.currentRequest.body, "%" STR(MAX_USERNAME) "s %" STR(MAX_MESSAGE_SIZE) "s", username,
                        message);
 
-                if (strlen(message) <= 1 || strlen(message) + 1 >= MESSAGE_MAX_SIZE) {
+                if (strlen(message) <= 1 || strlen(message) + 1 >= MAX_MESSAGE_SIZE) {
                     sendServerResponse(Messages.messageRequirement, StatusValidationError);
                     break;
                 }
@@ -217,7 +221,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                if (Server.users[userIndex].id == Server.currentRequest.type) {
+                if (Server.users[userIndex].id == Server.currentRequest.connectionId) {
                     sendServerResponse(Messages.youCannotSendMessageToYourself, StatusValidationError);
                     break;
                 }
@@ -227,7 +231,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                if (sendPrivateMessage(Server.currentRequest.type, Server.users[userIndex].id, message)) {
+                if (sendPrivateMessage(Server.currentRequest.connectionId, Server.users[userIndex].id, message)) {
                     sendServerResponse("", StatusOK);
                     break;
                 }

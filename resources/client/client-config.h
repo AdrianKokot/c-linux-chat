@@ -3,13 +3,12 @@
 
 #include "../../shared/shared.h"
 
-#define CLIENT_DEBUG false
+#define CLIENT_DEBUG true
 
 struct {
     char username[MAX_USERNAME];
     bool shouldPrintHelp;
     int channelId;
-    char *channelName;
     int serverId;
     long requestConnectionId;
     long responseConnectionId;
@@ -32,9 +31,6 @@ struct clientMessages {
     const char *askUsername;
     const char *chooseDifferentUsername;
     const char *notConnected;
-    const char *serverChannelsFull;
-    const char *channelCreated;
-    const char *channelDoesntExist;
 };
 
 struct clientMessages Messages;

@@ -31,10 +31,7 @@ struct clientMessages Messages = {
         "The given server is full. Please enter different server id to connect (hex without '0x'): ",
         "Please enter your username: ",
         "The given username is already taken. Please enter different username: ",
-        "You are not connected to any channel.",
-        "The server has maximum number of channels. Cannot create a new one.",
-        "Successfully created channel",
-        "Channel with the given name doesn't exist."
+        "You are not connected to any channel."
 };
 
 struct clientCliCommandSignatures CliCommands = {

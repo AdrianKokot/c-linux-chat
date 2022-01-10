@@ -2,7 +2,7 @@
 #define PUT_PSIW_COMMUNICATION_STRUCTS_H
 
 #define REQUEST_BODY_MAX_SIZE 2560
-#define MESSAGE_MAX_SIZE 255
+#define MAX_MESSAGE_SIZE 255
 
 #include "shared.h"
 
@@ -35,25 +35,28 @@ typedef enum eRType RType;
 
 
 typedef struct {
-    long type;
+    long connectionId;
     char body[REQUEST_BODY_MAX_SIZE];
-    StatusCode status;
-    RType rtype;
     unsigned long bodyLength;
-    long responseType;
+    RType type;
+    long responseConnectionId;
     int channelId;
 } Request;
 
-typedef Request Response;
+typedef struct {
+    long connectionId;
+    char body[REQUEST_BODY_MAX_SIZE];
+    unsigned long bodyLength;
+    RType type;
+    StatusCode status;
+} Response;
 
 const int REQUEST_SIZE;
+const int RESPONSE_SIZE;
 
-void sendRequest(int messageQueueId, long connectionId, long responseConnectionId, const char *body, RType rtype,
-                 int channelId, bool debug);
+void sendRequest(int queueId, long connectionId, long responseConnectionId, const char *body, RType type, int channelId, bool printDebug);
 
-void
-sendResponse(int messageQueueId, long connectionId, const char *body, RType rtype, StatusCode status, int channelId,
-             bool debug);
+void sendResponse(int queueId, long connectionId, const char *body, RType type, StatusCode status, bool printDebug);
 
 extern const char *RTypeString[];
 extern const char *StatusCodeString[];
