@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
             case R_CreateChannel: {
 
                 if (Server.channelCount >= MAX_CHANNELS) {
-                    sendServerResponse(Messages.serverChannelsFull, StatusServerFull);
+                    sendServerResponse(Messages.serverChannelsFull, StatusValidationError);
                     break;
                 }
 

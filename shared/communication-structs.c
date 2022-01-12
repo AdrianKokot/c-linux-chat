@@ -17,11 +17,9 @@ const char *RTypeString[] = {
 };
 
 const char *StatusCodeString[] = {
-        [StatusG] = "StatusG",
         [StatusOK] = "StatusOK",
         [StatusServerFull] = "StatusServerFull",
         [StatusValidationError] = "StatusValidationError",
-        [StatusInternalError] = "StatusInternalError",
         [StatusNotVerified] = "StatusNotVerified"
 };
 

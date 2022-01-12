@@ -7,11 +7,9 @@
 #include "shared.h"
 
 typedef enum {
-    StatusG,
     StatusOK,
     StatusServerFull,
     StatusValidationError,
-    StatusInternalError,
     StatusNotVerified
 } StatusCode;
 
