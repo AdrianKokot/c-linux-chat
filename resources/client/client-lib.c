@@ -65,8 +65,6 @@ void sendClientRequest(const char *body, RType rtype) {
         loggedOut();
     }
 
-    printf("SendClientRequest channelID: %d\n", Client.channelId);
-
     sendRequest(Client.queueId, Client.requestConnectionId, Client.responseConnectionId, body, rtype, Client.channelId,
                 CLIENT_DEBUG);
 }
@@ -183,11 +181,11 @@ int executeCommand(char command[255]) {
 
     if (checkVSignature(command, AppCommands.privateMessage)) {
 
-        char *userAndMessage = malloc(sizeof(char) * MAX_CHANNEL_NAME);
+        char *userAndMessage = malloc(sizeof(char) * MAX_MESSAGE_SIZE);
 
         for (int i = 2; i < strlen(command); i++) {
             if (command[i] == ' ') {
-                strncpy(userAndMessage, command + i + 1, MAX_CHANNEL_NAME);
+                strncpy(userAndMessage, command + i + 1, MAX_MESSAGE_SIZE);
                 break;
             }
         }

@@ -2,7 +2,7 @@
 #define PUT_PSIW_SHARED_H
 
 #define DEBUG true
-#define RESET_SCREENS false
+#define RESET_SCREENS true
 #define MAX_CHANNEL_NAME 32
 #define MAX_USERNAME 32
 
@@ -24,6 +24,6 @@
 #include <stdarg.h>
 
 #include "utils.h"
-#include "communication-structs.h"
+#include "communication.h"
 
 #endif //PUT_PSIW_SHARED_H

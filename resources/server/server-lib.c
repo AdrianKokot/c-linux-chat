@@ -256,7 +256,9 @@ void sendChannelMessage(const char *message, int id, bool format) {
     char *messageForUser = malloc(sizeof(char) * MAX_MESSAGE_SIZE);
 
     if (format) {
-        snprintf(messageForUser, MAX_MESSAGE_SIZE + 1, "[\033[35m%s\033[m] [\033[34m%s\033[m] [\033[32m%s\033[m]: %s",
+
+        snprintf(messageForUser, MAX_MESSAGE_SIZE + 1,
+                 "[\033[35m%s\033[m] [\033[34m%s\033[m] [\033[32m%s\033[m]: %s",
                  getTimeString(),
                  Server.channels[channelIdx].name, Server.users[senderIdx].username, message);
     } else {

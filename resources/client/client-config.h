@@ -3,7 +3,7 @@
 
 #include "../../shared/shared.h"
 
-#define CLIENT_DEBUG true
+#define CLIENT_DEBUG false
 
 struct {
     char username[MAX_USERNAME];

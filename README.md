@@ -4,6 +4,26 @@ Linux chat app that uses only System V inter-process communication facilities (I
 
 Project created for "System and Concurrent Programming" course at Poznan University of Technology.
 
+## Table of contents
+
+- [General description](#general-description)
+- [Protocol](#protocol)
+    * [RType](#rtype)
+    * [StatusCode](#statuscode)
+    * [Request](#request)
+    * [Response](#response)
+    * [Heartbeat mechanism](#heartbeat-mechanism)
+    * [Communication diagram](#communication-diagram)
+        + [General requests](#general-requests)
+        + [Channel & private messages](#channel---private-messages)
+            - [Channel messages](#channel-messages)
+            - [Private message](#private-message)
+- [Compilation](#compilation)
+- [How to run](#how-to-run)
+    * [Server](#server)
+    * [Client](#client)
+- [Files description](#files-description)
+
 ## General description
 
 The app has two executable files: server and client. It's the client-server architecture, so there's one server and many clients.
@@ -12,7 +32,7 @@ Server uses one IPC message queue to communicate with all clients. Users are dif
 
 The user defines the IPC queue id during the start of the file.
 
-## [](#protocol) Protocol
+## Protocol
 
 Structs used during communication are defined as follows:
 
@@ -45,7 +65,7 @@ Purpose of struct's properties:
 * **`int channelId`** - the channel id that user is connected to
 * **`StatusCode status`** - response *[status](#statuscode)*
 
-### [](#rtype) RType
+### RType
 
 RType is an enum defined as follows:
 
@@ -77,7 +97,7 @@ typedef enum eRType RType;
 
 The rest types are used in general communication to get the data from the server.
 
-### [](#statuscode) StatusCode
+### StatusCode
 
 StatusCode is an enum defined as follows:
 
@@ -97,9 +117,9 @@ Usage of statuses:
 * `StatusOK` - sent when the request is parsed correctly, and the body has contents that match the [request rtype](#rtype)
 * `StatusServerFull` - sent when the server has reached the limit of users. Sent only in answer to [unregistered requests](#rtype)
 * `StatusValidationError` - sent when the request body doesn't match requirements. Example: username is already taken, the username is too long/short.
-* `StatusNotVerified` - sent when the user that performs request is no longer verified (didn't respond to [`R_Hearbeat`](#heartbeat))
+* `StatusNotVerified` - sent when the user that performs request is no longer verified (didn't respond to [`R_Hearbeat`](#heartbeat-mechanism))
 
-### [](#request) Request
+### Request
 
 During request, every property is filled, but not always all of the properties are used. For example: `channelId` is used when sending a message to the channel.
 
@@ -111,11 +131,11 @@ During communication with the user, there is one queue with 6 different types (m
 * 2 types are used for messages (private and channel). For sending a message the client uses `connectionId + 1`. The server sends the message to other clients using their's `responseConnectionId + 1`.
 * 2 types are used for the heartbeat mechanism. After every request server checks the user's connection. During check, the server sends `R_Heartbeat` request on user's `connectionId + 2` and listens for answer on user's `responseConnectionId + 2`.
 
-### [](#response) Response
+### Response
 
 If the response is successful, its `body` contains information related to the request's `RType`. Otherwise, the server responds with the error message in `body`.
 
-### [](#heartbeat) Heartbeat mechanism
+### Heartbeat mechanism
 
 Heartbeat is a mechanism that allows the server to verify if the user is still connected to the server. The server listens for the requests in the loop. At the end of the loop, there's a user check.
 
@@ -183,3 +203,14 @@ You can also provide that by `-s <id>` or `--server <id>` parameter.
 
 After getting the correct server id, there'll be a question about the username. It has to be unique.
 You can also provide that by `-u <username>` or `--username <username>`.
+
+## Files description
+
+The server or client files are divided into two categories:
+* **\*-config** - that file contains basic config of the app side. For example there you can find `#define`s, configuration structures and global variables like `Messages`, `CommandSignatures` and so on. 
+* **\*-lib** - that file contains all the used functions in the main file.
+
+Both app sides use also shared functionality, that can be found in files:
+* **shared** - the file that has all `#include`s to used libraries.
+* **utils** - the file that contains basic utility functions, like `printfDebug` or `getTimeString`.
+* **communication** - the file that contains basic protocol's functionality and structs like `Request`, `Response`, `sendRequest`, `sendResponse`.

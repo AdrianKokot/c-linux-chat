@@ -1,6 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
-
 #include "resources/server/server-lib.h"
 
 int main(int argc, char *argv[]) {
@@ -197,7 +194,7 @@ int main(int argc, char *argv[]) {
                 char *username = malloc(sizeof(char) * MAX_USERNAME);
                 char *message = malloc(sizeof(char) * MAX_MESSAGE_SIZE);
 
-                sscanf(Server.currentRequest.body, "%" STR(MAX_USERNAME) "s %" STR(MAX_MESSAGE_SIZE) "s", username,
+                sscanf(Server.currentRequest.body, "%" STR(MAX_USERNAME) "s %" STR(MAX_MESSAGE_SIZE) "[^\n]", username,
                        message);
 
                 if (strlen(message) <= 1 || strlen(message) + 1 >= MAX_MESSAGE_SIZE) {
@@ -246,5 +243,3 @@ int main(int argc, char *argv[]) {
         verifyUsers();
     }
 }
-
-#pragma clang diagnostic pop
